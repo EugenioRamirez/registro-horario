@@ -489,10 +489,13 @@ function updateSummary() {
 
 async function getSiteId() {
   const token=await getToken();
-  const url=CONFIG.sharePointSite.replace('https://','').split('/');
-  const host=url[0], path='/'+url.slice(2).join('/');
+  const parts=CONFIG.sharePointSite.replace('https://','').split('/');
+  const host=parts[0];
+  const path='/'+parts.slice(1).join('/');
   const resp=await fetch(`https://graph.microsoft.com/v1.0/sites/${host}:${path}`,{headers:{Authorization:`Bearer ${token}`}});
-  return (await resp.json()).id;
+  const data=await resp.json();
+  if(!data.id){console.error('getSiteId error:',JSON.stringify(data));throw new Error('Sitio no encontrado: '+JSON.stringify(data));}
+  return data.id;
 }
 
 async function getListId(siteId) {
