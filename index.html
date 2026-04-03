@@ -153,8 +153,7 @@
       <div class="month-nav">
         <div class="month-title" id="month-title">— <span>—</span></div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button class="btn-action" onclick="fillMonth()" title="Rellenar días vacíos con horario estándar">&#9632; Rellenar mes</button>
-          <button class="btn-action" onclick="copyPrevMonth()" title="Copiar registros del mes anterior">&#8635; Copiar mes anterior</button>
+          <button class="btn-action" onclick="fillPrevWeek()" title="Rellenar días vacíos de la semana anterior con horario estándar">&#9632; Rellenar semana anterior</button>
           <div class="nav-btns">
             <button class="btn-nav" onclick="changeMonth(-1)">&#8592;</button>
             <button class="btn-nav" onclick="changeMonth(0)">&#9679;</button>
@@ -636,66 +635,39 @@ function showReminderIfNeeded() {
   }
 }
 
-// ── FILL MONTH ───────────────────────────────────────────
-function fillMonth() {
-  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+// ── FILL PREV WEEK ───────────────────────────────────────
+function fillPrevWeek() {
+  const today = new Date();
+  // Find Monday of previous week
+  const dayOfWeek = today.getDay()===0 ? 7 : today.getDay();
+  const mondayThisWeek = new Date(today);
+  mondayThisWeek.setDate(today.getDate() - dayOfWeek + 1);
+  const mondayPrevWeek = new Date(mondayThisWeek);
+  mondayPrevWeek.setDate(mondayThisWeek.getDate() - 7);
+  const fridayPrevWeek = new Date(mondayPrevWeek);
+  fridayPrevWeek.setDate(mondayPrevWeek.getDate() + 4);
+
   const festivosYear = FESTIVOS[currentYear]||[];
   let filled = 0;
-  for(let d=1; d<=daysInMonth; d++) {
-    const date = new Date(currentYear, currentMonth, d);
-    const dow = date.getDay();
-    const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+
+  for(let d=mondayPrevWeek; d<=fridayPrevWeek; d.setDate(d.getDate()+1)) {
+    if(d.getMonth() !== currentMonth || d.getFullYear() !== currentYear) continue;
+    const day = d.getDate();
+    const dow = d.getDay();
+    const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
     const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
     if(blocked) continue;
-    const saved = monthData[String(d)]||{};
+    const saved = monthData[String(day)]||{};
     if(saved.absence||saved.em||saved.sm||saved.et||saved.st) continue;
-    monthData[String(d)] = {em:DEFAULT_TIMES[0],sm:DEFAULT_TIMES[1],et:DEFAULT_TIMES[2],st:DEFAULT_TIMES[3],absence:''};
+    monthData[String(day)] = {em:DEFAULT_TIMES[0],sm:DEFAULT_TIMES[1],et:DEFAULT_TIMES[2],st:DEFAULT_TIMES[3],absence:''};
     filled++;
   }
-  if(filled===0){ showToast('No hay dias vacios que rellenar',''); return; }
+  if(filled===0){ showToast('No hay dias vacios en la semana anterior',''); return; }
   hasChanges=true;
   setStatus('Cambios sin guardar','');
   document.getElementById('btn-save').disabled=false;
   renderTable();
   showToast(filled+' dias rellenados con horario estandar','success');
-}
-
-// ── COPY PREV MONTH ───────────────────────────────────────
-async function copyPrevMonth() {
-  let prevMonth = currentMonth - 1, prevYear = currentYear;
-  if(prevMonth < 0){ prevMonth = 11; prevYear--; }
-  setStatus('Cargando mes anterior...','');
-  try {
-    const email = currentUser.username;
-    const rows = await sbFetch('registro_horario?empleado=eq.'+encodeURIComponent(email)+'&ano=eq.'+prevYear+'&mes=eq.'+(prevMonth+1)+'&select=*') || [];
-    if(rows.length===0){ showToast('No hay datos en el mes anterior',''); setStatus('Sin cambios pendientes',''); return; }
-    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-    const festivosYear = FESTIVOS[currentYear]||[];
-    let copied = 0;
-    rows.forEach(r => {
-      const d = r.dia;
-      if(d > daysInMonth) return;
-      const date = new Date(currentYear, currentMonth, d);
-      const dow = date.getDay();
-      const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
-      if(blocked) return;
-      const existing = monthData[String(d)]||{};
-      if(existing.absence||existing.em||existing.sm||existing.et||existing.st) return;
-      monthData[String(d)] = {em:r.entrada_manana||'',sm:r.salida_manana||'',et:r.entrada_tarde||'',st:r.salida_tarde||'',absence:r.ausencia||''};
-      copied++;
-    });
-    if(copied===0){ showToast('No hay dias nuevos que copiar',''); setStatus('Sin cambios pendientes',''); return; }
-    hasChanges=true;
-    setStatus('Cambios sin guardar','');
-    document.getElementById('btn-save').disabled=false;
-    renderTable();
-    showToast(copied+' dias copiados del mes anterior','success');
-  } catch(e) {
-    console.error(e);
-    showToast('Error al copiar mes anterior','error');
-    setStatus('Sin cambios pendientes','');
-  }
 }
 
 // ── VALIDATE ─────────────────────────────────────────────
