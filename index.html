@@ -113,6 +113,12 @@
   .toast.error{background:#dc2626;}
   .btn-action{font-family:'Nunito',sans-serif;font-size:12px;font-weight:500;color:var(--blue);background:white;border:0.5px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
   .btn-action:hover{background:var(--blue-light);}
+  .btn-validate{font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:white;background:var(--success);border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:background 0.2s;}
+  .btn-validate:hover{background:#15803d;}
+  .btn-validate:disabled{background:#9ca3af;cursor:default;}
+  .btn-secondary{font-family:'Nunito',sans-serif;font-size:14px;font-weight:500;color:var(--blue);background:white;border:0.5px solid var(--border);border-radius:8px;padding:10px 16px;cursor:pointer;transition:background 0.2s;}
+  .btn-secondary:hover{background:var(--blue-light);}
+  .validated-banner{background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:8px 14px;font-size:13px;color:#166534;font-weight:500;display:flex;align-items:center;gap:6px;}
 </style>
 </head>
 <body>
@@ -195,7 +201,22 @@
 
 <div class="save-bar">
   <div class="save-status" id="save-status">Sin cambios pendientes</div>
-  <button class="btn-save" id="btn-save" onclick="saveData()" disabled>Guardar</button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-secondary" id="btn-export" onclick="exportPDF()">&#8595; Exportar PDF</button>
+    <button class="btn-validate" id="btn-validate" onclick="validateMonth()">&#10003; Validar mes</button>
+    <button class="btn-save" id="btn-save" onclick="saveData()" disabled>Guardar</button>
+  </div>
+</div>
+<div id="validate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:2rem 2.5rem;max-width:420px;width:90%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.2);">
+    <div style="font-size:40px;margin-bottom:1rem;">&#10003;</div>
+    <div style="font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:0.75rem;">Validar registro horario</div>
+    <div style="font-size:14px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6;">Confirmo que las horas introducidas son correctas y las valido a efectos de reporte horario del mes de <strong id="validate-month-name"></strong>.</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="document.getElementById('validate-overlay').style.display='none'" style="padding:10px 20px;border:0.5px solid #d1d5db;border-radius:8px;background:white;font-family:'Nunito',sans-serif;font-size:14px;cursor:pointer;">Cancelar</button>
+      <button onclick="confirmValidation()" style="padding:10px 24px;background:#1a5fa8;color:white;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Confirmar validación</button>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -226,6 +247,7 @@ let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 let monthData = {};
 let hasChanges = false;
+let monthValidated = false;
 
 async function sbFetch(path, options={}) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
@@ -253,6 +275,7 @@ async function upsertDay(day, vals) {
   const d = parseInt(day);
   // Check if record exists
   const existing = await sbFetch(`registro_horario?empleado=eq.${encodeURIComponent(email)}&ano=eq.${currentYear}&mes=eq.${currentMonth+1}&dia=eq.${d}&select=id`);
+  if(monthValidated) return; // Don't save if month is validated
   const body = {
     empleado: email,
     nombre_empleado: currentUser.name,
@@ -318,6 +341,7 @@ async function loadMonth() {
   document.getElementById('month-title').innerHTML=`${MESES[currentMonth]} <span>${currentYear}</span>`;
   try {
     const rows = await loadMonthFromDB();
+    monthValidated = rows.some(r => r.validado);
     rows.forEach(r => {
       monthData[String(r.dia)] = {
         em: r.entrada_manana||'', sm: r.salida_manana||'',
@@ -327,6 +351,7 @@ async function loadMonth() {
     });
   } catch(e) { console.error('Error cargando:',e); }
   renderTable();
+  updateValidationUI();
   showReminderIfNeeded();
   setStatus('Sin cambios pendientes','');
 }
@@ -712,6 +737,137 @@ function showReminderIfNeeded() {
   } else {
     banner.style.display='none';
   }
+}
+
+// ── VALIDATION ───────────────────────────────────────────
+function validateMonth() {
+  if(hasChanges){ showToast('Guarda los cambios antes de validar','error'); return; }
+  document.getElementById('validate-month-name').textContent = MESES[currentMonth]+' '+currentYear;
+  document.getElementById('validate-overlay').style.display='flex';
+}
+
+async function confirmValidation() {
+  document.getElementById('validate-overlay').style.display='none';
+  setStatus('Validando...','saving');
+  try {
+    const email = currentUser.username;
+    // Mark all records for this month/year as validated
+    await sbFetch('registro_horario?empleado=eq.'+encodeURIComponent(email)+'&ano=eq.'+currentYear+'&mes=eq.'+(currentMonth+1), {
+      method: 'PATCH',
+      headers: {'Prefer':'return=minimal'},
+      body: JSON.stringify({validado: true, fecha_validacion: new Date().toISOString()})
+    });
+    setStatus('Mes validado correctamente','saved');
+    showToast('Registro del mes validado','success');
+    monthValidated = true;
+    updateValidationUI();
+  } catch(e) {
+    console.error(e);
+    showToast('Error al validar','error');
+    setStatus('Sin cambios pendientes','');
+  }
+}
+
+function updateValidationUI() {
+  const btnSave = document.getElementById('btn-save');
+  const btnValidate = document.getElementById('btn-validate');
+  const inputs = document.querySelectorAll('.time-input, .absence-select');
+  if(monthValidated) {
+    btnSave.disabled=true;
+    btnValidate.disabled=true;
+    btnValidate.textContent='&#10003; Mes validado';
+    inputs.forEach(i => i.disabled=true);
+    setStatus('Este mes ya ha sido validado','saved');
+  } else {
+    btnValidate.disabled=false;
+    btnValidate.innerHTML='&#10003; Validar mes';
+    inputs.forEach(i => {
+      if(!i.closest('tr').classList.contains('weekend') && !i.closest('tr').classList.contains('holiday')) {
+        i.disabled=false;
+      }
+    });
+  }
+}
+
+// ── EXPORT PDF ────────────────────────────────────────────
+function exportPDF() {
+  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  const festivosYear = FESTIVOS[currentYear]||[];
+  const userName = currentUser.name;
+  const mesNombre = MESES[currentMonth];
+
+  let rows = '';
+  for(let d=1; d<=daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const dow = date.getDay();
+    const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isWeekend = dow===0||dow===6;
+    const isHoliday = festivosYear.includes(dateStr);
+    const blocked = isWeekend||isHoliday;
+    const saved = monthData[String(d)]||{};
+
+    let bgColor = blocked ? '#f5f5f5' : 'white';
+    let em='', sm='', et='', st='';
+    if(!blocked) {
+      if(saved.absence) {
+        const labels = {vacaciones:'Vacaciones',enfermedad:'Enfermedad',otras:'Otras ausencias'};
+        em = '<td colspan="4" style="text-align:center;color:#666;font-style:italic;font-size:11px;">'+( labels[saved.absence]||saved.absence)+'</td>';
+      } else {
+        em = '<td>'+( saved.em||'')+'</td><td>'+(saved.sm||'')+'</td><td>'+(saved.et||'')+'</td><td>'+(saved.st||'')+'</td>';
+      }
+    } else {
+      em = '<td></td><td></td><td></td><td></td>';
+    }
+
+    rows += `<tr style="background:${bgColor}">
+      <td style="text-align:center;font-weight:600;">${d}</td>
+      <td style="text-align:center;color:#666;font-size:11px;">${DIAS_CORTO[dow]}</td>
+      ${saved.absence ? em : (blocked ? em : em)}
+    </tr>`;
+  }
+
+  const validadoStr = monthValidated ? '<p style="margin-top:24px;font-size:11px;color:#166534;font-weight:600;">&#10003; Registro validado por el trabajador</p>' : '';
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Registro Horario - ${userName} - ${mesNombre} ${currentYear}</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:40px;color:#1a1a2e;font-size:12px;}
+    .logo{text-align:center;margin-bottom:24px;}
+    .logo-text{font-size:22px;font-weight:700;color:#1a5fa8;letter-spacing:0.05em;}
+    .logo-text span{color:#e07020;}
+    h2{font-size:14px;font-weight:600;margin-bottom:16px;color:#1a5fa8;}
+    table.info{width:100%;border-collapse:collapse;margin-bottom:20px;}
+    table.info td{padding:6px 10px;border:1px solid #ddd;font-size:12px;}
+    table.info td:first-child{font-weight:600;background:#f8f9fa;width:140px;}
+    table.main{width:100%;border-collapse:collapse;}
+    table.main th{background:#1a5fa8;color:white;padding:8px;text-align:center;font-size:11px;}
+    table.main td{padding:6px 8px;border-bottom:0.5px solid #e5e7eb;text-align:center;font-size:12px;}
+    table.main tr:hover{background:#f8f9fa;}
+    .subth{background:#e8f1fb;color:#1a5fa8;font-weight:600;font-size:10px;}
+    @media print{body{margin:20px;}}
+  </style>
+  </head><body>
+  <div class="logo"><span class="logo-text">X<span>pecializa</span></span><div style="font-size:10px;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;">Consulting</div></div>
+  <h2>Control de Horario — ${mesNombre} ${currentYear}</h2>
+  <table class="info">
+    <tr><td>Trabajador</td><td>${userName}</td></tr>
+    <tr><td>Mes</td><td>${mesNombre}</td></tr>
+    <tr><td>Año</td><td>${currentYear}</td></tr>
+  </table>
+  <table class="main">
+    <thead>
+      <tr><th rowspan="2">Día</th><th rowspan="2" style="width:40px"></th><th colspan="2">Mañana</th><th colspan="2">Tarde</th></tr>
+      <tr><th class="subth">Entrada</th><th class="subth">Salida</th><th class="subth">Entrada</th><th class="subth">Salida</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  ${validadoStr}
+  </body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
 }
 
 function setStatus(msg,cls){const el=document.getElementById('save-status');el.textContent=msg;el.className='save-status '+cls;}
