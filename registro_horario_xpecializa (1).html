@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Horario — Xpecializa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<style>
+  :root {
+    --blue: #1a5fa8;
+    --blue-light: #e8f1fb;
+    --blue-mid: #378add;
+    --orange: #e07020;
+    --orange-light: #fdf0e4;
+    --border: rgba(26,95,168,0.15);
+    --gray-bg: #f5f6f8;
+    --weekend: #f0f0f0;
+    --holiday: #fff3e0;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --success: #16a34a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--gray-bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* LOGIN SCREEN */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f2d52 0%, #1a5fa8 60%, #2d7dd2 100%);
+  }
+  .login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+  }
+  .login-logo {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .login-logo span { color: var(--orange); }
+  .login-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.5rem 0 0.5rem;
+  }
+  .login-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  .btn-microsoft {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 20px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-microsoft:hover { background: #154d8a; }
+  .btn-microsoft svg { flex-shrink: 0; }
+
+  /* APP SHELL */
+  #app-screen { display: none; min-height: 100vh; }
+  header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-logo {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+  .header-logo span { color: var(--orange); }
+  .header-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .user-name { font-size: 13px; color: var(--text-muted); }
+  .btn-logout {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+  }
+  .btn-logout:hover { background: var(--gray-bg); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* MONTH SELECTOR */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .month-title { font-size: 20px; font-weight: 600; color: var(--text); }
+  .month-title span { color: var(--blue); }
+  .nav-btns { display: flex; gap: 8px; }
+  .btn-nav {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--blue);
+    transition: background 0.15s;
+  }
+  .btn-nav:hover { background: var(--blue-light); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    background: white;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--blue); }
+  thead th {
+    padding: 12px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  thead th:first-child { text-align: left; padding-left: 16px; width: 120px; }
+  .subhead tr { background: rgba(26,95,168,0.06); }
+  .subhead th {
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--blue);
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .subhead th:first-child { text-align: left; padding-left: 16px; }
+
+  tbody tr { border-bottom: 0.5px solid rgba(26,95,168,0.08); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr.workday:hover { background: rgba(26,95,168,0.02); }
+  tbody tr.weekend { background: var(--weekend); }
+  tbody tr.holiday { background: var(--holiday); }
+  tbody tr.today { background: rgba(224,112,32,0.04); }
+
+  td {
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  td:first-child {
+    text-align: left;
+    padding-left: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    width: 120px;
+  }
+  .day-num { font-weight: 600; color: var(--text); }
+  .day-name { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+  .day-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-weight: 500;
+  }
+  .tag-weekend { background: #e5e7eb; color: #6b7280; }
+  .tag-holiday { background: #fde68a; color: #92400e; }
+  .tag-today { background: var(--orange-light); color: var(--orange); }
+
+  .time-input {
+    width: 72px;
+    padding: 5px 6px;
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .time-input:focus {
+    outline: none;
+    border-color: var(--blue-mid);
+    box-shadow: 0 0 0 3px rgba(55,138,221,0.1);
+  }
+  .time-input:disabled {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .time-input.filled { border-color: rgba(26,95,168,0.3); background: var(--blue-light); }
+
+  /* SUMMARY */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 1.5rem;
+  }
+  .summary-card {
+    background: white;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .summary-card .sc-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .summary-card .sc-value { font-size: 22px; font-weight: 600; color: var(--blue); }
+  .summary-card.accent .sc-value { color: var(--orange); }
+
+  /* SAVE BAR */
+  .save-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    z-index: 20;
+  }
+  .save-status { font-size: 13px; color: var(--text-muted); }
+  .save-status.saved { color: var(--success); }
+  .save-status.saving { color: var(--blue); }
+  .save-status.error { color: #dc2626; }
+  .btn-save {
+    padding: 10px 28px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover { background: #154d8a; }
+  .btn-save:disabled { background: #9ca3af; cursor: default; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: #1a1a2e;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.3s;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: #dc2626; }
+
+  .pb-24 { padding-bottom: 80px; }
+
+  @media (max-width: 640px) {
+    main { padding: 1rem; }
+    .time-input { width: 62px; font-size: 12px; }
+    .summary { grid-template-columns: 1fr 1fr; }
+    thead th:first-child { width: 90px; }
+    td:first-child { padding-left: 10px; }
+    .save-bar { padding: 0.75rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">X<span>pecializa</span></div>
+    <div style="font-size:11px;color:#9ca3af;letter-spacing:0.06em;text-transform:uppercase">Consulting</div>
+    <div class="login-title">Registro de horario</div>
+    <div class="login-sub">Accede con tu cuenta corporativa de Microsoft para registrar tu jornada laboral.</div>
+    <button class="btn-microsoft" onclick="signIn()">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Entrar con Microsoft
+    </button>
+    <div style="margin-top:1.5rem;font-size:11px;color:#d1d5db;">Solo accesible con cuentas @xpecializa.com</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app-screen">
+  <header>
+    <div class="header-logo">X<span>pecializa</span> <span style="color:#9ca3af;font-weight:300;margin-left:6px">/ Registro de horario</span></div>
+    <div class="header-user">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div class="user-name" id="user-name-label"></div>
+      <button class="btn-logout" onclick="signOut()">Salir</button>
+    </div>
+  </header>
+
+  <main class="pb-24">
+    <div class="month-nav">
+      <div class="month-title" id="month-title">— <span>—</span></div>
+      <div class="nav-btns">
+        <button class="btn-nav" onclick="changeMonth(-1)" title="Mes anterior">&#8592;</button>
+        <button class="btn-nav" onclick="changeMonth(0)" title="Mes actual">&#9679;</button>
+        <button class="btn-nav" onclick="changeMonth(1)" title="Mes siguiente">&#8594;</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e5e7eb"></div> Fin de semana</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fde68a"></div> Festivo Madrid</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--orange-light)"></div> Hoy</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue-light)"></div> Con horas registradas</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th colspan="2">Mañana</th>
+            <th colspan="2">Tarde</th>
+          </tr>
+        </thead>
+        <thead class="subhead">
+          <tr>
+            <th></th>
+            <th>Entrada</th>
+            <th>Salida</th>
+            <th>Entrada</th>
+            <th>Salida</th>
+          </tr>
+        </thead>
+        <tbody id="days-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="sc-label">Días laborables</div>
+        <div class="sc-value" id="sum-workdays">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-label">Días registrados</div>
+        <div class="sc-value" id="sum-registered">—</div>
+      </div>
+      <div class="summary-card accent">
+        <div class="sc-label">Horas totales</div>
+        <div class="sc-value" id="sum-hours">—</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="save-bar">
+    <div class="save-status" id="save-status">Sin cambios pendientes</div>
+    <button class="btn-save" id="btn-save" onclick="saveData()" disabled>Guardar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN — editar con tus valores de Azure AD
+// ============================================================
+const CONFIG = {
+  clientId:     '272a9bb5-a2e7-466a-bc0a-443691f2c523',
+  tenantId:     '92e73534-d07f-4e50-9904-b194d0faf644',
+  sharePointSite: 'https://xpecializacom.sharepoint.com/sites/RRHH',
+  listName:     'RegistroHorario'
+};
+
+// ============================================================
+// FESTIVOS COMUNIDAD DE MADRID 2025 y 2026
+// Fuente: Calendario laboral oficial
+// ============================================================
+const FESTIVOS = {
+  2025: [
+    '2025-01-01','2025-01-06','2025-04-17','2025-04-18',
+    '2025-05-01','2025-05-02','2025-05-15','2025-07-25',
+    '2025-08-15','2025-10-12','2025-11-01','2025-11-10',
+    '2025-12-06','2025-12-08','2025-12-25'
+  ],
+  2026: [
+    '2026-01-01','2026-01-06','2026-04-02','2026-04-03',
+    '2026-05-01','2026-05-02','2026-05-15','2026-07-25',
+    '2026-08-15','2026-10-12','2026-11-02','2026-11-10',
+    '2026-12-07','2026-12-08','2026-12-25'
+  ]
+};
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// ============================================================
+// MSAL
+// ============================================================
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.clientId,
+    authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: window.location.href.split('?')[0]
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+const scopes = ['User.Read', 'Sites.ReadWrite.All'];
+
+let currentUser = null;
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth(); // 0-indexed
+let monthData = {};   // { "1": {em:"08:30", sm:"12:30", et:"13:30", st:"17:30"}, ... }
+let hasChanges = false;
+
+async function signIn() {
+  try {
+    const resp = await msalInstance.loginPopup({ scopes });
+    msalInstance.setActiveAccount(resp.account);
+    await initApp(resp.account);
+  } catch(e) {
+    console.error(e);
+    showToast('Error al iniciar sesión', 'error');
+  }
+}
+
+function signOut() {
+  msalInstance.logoutPopup();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+async function getToken() {
+  const account = msalInstance.getActiveAccount();
+  const resp = await msalInstance.acquireTokenSilent({ scopes, account });
+  return resp.accessToken;
+}
+
+async function initApp(account) {
+  currentUser = account;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  const parts = account.name.split(' ');
+  const initials = parts.map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name-label').textContent = account.name;
+
+  await loadMonth();
+}
+
+// ============================================================
+// NAVEGACIÓN DE MES
+// ============================================================
+function changeMonth(dir) {
+  if (dir === 0) {
+    currentYear = new Date().getFullYear();
+    currentMonth = new Date().getMonth();
+  } else {
+    currentMonth += dir;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+  }
+  loadMonth();
+}
+
+async function loadMonth() {
+  monthData = {};
+  hasChanges = false;
+  setStatus('Cargando…', '');
+  document.getElementById('btn-save').disabled = true;
+
+  document.getElementById('month-title').innerHTML =
+    `${MESES[currentMonth]} <span>${currentYear}</span>`;
+
+  // Cargar datos existentes de SharePoint
+  try {
+    const data = await fetchMonthData();
+    data.forEach(row => {
+      monthData[String(row.Dia)] = {
+        em: row.EntradaMañana || '',
+        sm: row.SalidaMañana  || '',
+        et: row.EntradaTarde  || '',
+        st: row.SalidaTarde   || '',
+        id: row.id
+      };
+    });
+  } catch(e) {
+    console.warn('No se pudieron cargar datos:', e);
+  }
+
+  renderTable();
+  setStatus('Sin cambios pendientes', '');
+}
+
+// ============================================================
+// RENDER TABLA
+// ============================================================
+function renderTable() {
+  const tbody = document.getElementById('days-tbody');
+  tbody.innerHTML = '';
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const festivosYear = FESTIVOS[currentYear] || [];
+
+  let workdays = 0, registered = 0, totalMinutes = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const dow = date.getDay(); // 0=dom, 6=sab
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isWeekend = dow === 0 || dow === 6;
+    const isHoliday = festivosYear.includes(dateStr);
+    const isToday   = dateStr === todayStr;
+    const blocked   = isWeekend || isHoliday;
+    const saved     = monthData[String(d)] || {};
+
+    if (!blocked) workdays++;
+    if (!blocked && (saved.em || saved.sm || saved.et || saved.st)) registered++;
+    if (!blocked && saved.em && saved.sm && saved.et && saved.st) {
+      totalMinutes += timeToMins(saved.sm) - timeToMins(saved.em) +
+                      timeToMins(saved.st) - timeToMins(saved.et);
+    }
+
+    const tr = document.createElement('tr');
+    tr.className = blocked ? (isWeekend ? 'weekend' : 'holiday') : (isToday ? 'today' : 'workday');
+
+    let tag = '';
+    if (isWeekend) tag = '<span class="day-tag tag-weekend">Fin de semana</span>';
+    else if (isHoliday) tag = '<span class="day-tag tag-holiday">Festivo</span>';
+    else if (isToday) tag = '<span class="day-tag tag-today">Hoy</span>';
+
+    const dayCell = `<td><span class="day-num">${d}</span><span class="day-name">${DIAS_CORTO[dow]}</span>${tag}</td>`;
+
+    const fields = ['em','sm','et','st'];
+    const placeholders = ['08:30','12:30','13:30','17:30'];
+
+    let cells = '';
+    fields.forEach((f, i) => {
+      const val = saved[f] || '';
+      const filled = val ? ' filled' : '';
+      if (blocked) {
+        cells += `<td><input class="time-input" disabled value="${val}"></td>`;
+      } else {
+        cells += `<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${f}"
+          value="${val}" placeholder="${placeholders[i]}"
+          oninput="onInput(this)" onfocus="this.showPicker && this.showPicker()"></td>`;
+      }
+    });
+
+    tr.innerHTML = dayCell + cells;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('sum-workdays').textContent = workdays;
+  document.getElementById('sum-registered').textContent = registered;
+  document.getElementById('sum-hours').textContent = minsToHours(totalMinutes);
+}
+
+function timeToMins(t) {
+  if (!t) return 0;
+  const [h,m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+function minsToHours(m) {
+  if (!m) return '0h';
+  return `${Math.floor(m/60)}h ${m%60 > 0 ? (m%60)+'m' : ''}`.trim();
+}
+
+// ============================================================
+// INPUTS
+// ============================================================
+function onInput(el) {
+  const day   = el.dataset.day;
+  const field = el.dataset.field;
+  if (!monthData[day]) monthData[day] = {};
+  monthData[day][field] = el.value;
+  el.classList.toggle('filled', !!el.value);
+  hasChanges = true;
+  setStatus('Cambios sin guardar', '');
+  document.getElementById('btn-save').disabled = false;
+  updateSummary();
+}
+
+function updateSummary() {
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const festivosYear = FESTIVOS[currentYear] || [];
+  let workdays = 0, registered = 0, totalMinutes = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(currentYear, currentMonth, d);
+    const dow = date.getDay();
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const blocked = dow === 0 || dow === 6 || festivosYear.includes(dateStr);
+    const saved = monthData[String(d)] || {};
+    if (!blocked) workdays++;
+    if (!blocked && (saved.em || saved.sm || saved.et || saved.st)) registered++;
+    if (!blocked && saved.em && saved.sm && saved.et && saved.st) {
+      totalMinutes += timeToMins(saved.sm) - timeToMins(saved.em) +
+                      timeToMins(saved.st) - timeToMins(saved.et);
+    }
+  }
+  document.getElementById('sum-workdays').textContent  = workdays;
+  document.getElementById('sum-registered').textContent = registered;
+  document.getElementById('sum-hours').textContent = minsToHours(totalMinutes);
+}
+
+// ============================================================
+// SHAREPOINT — GRAPH API
+// ============================================================
+async function getSiteId() {
+  const token = await getToken();
+  const url = CONFIG.sharePointSite.replace('https://','').split('/');
+  const host = url[0];
+  const path = '/' + url.slice(2).join('/');
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/sites/${host}:${path}`,
+    { headers: { Authorization: `Bearer ${token}` }}
+  );
+  const data = await resp.json();
+  return data.id;
+}
+
+async function getListId(siteId) {
+  const token = await getToken();
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/sites/${siteId}/lists?$filter=displayName eq '${CONFIG.listName}'`,
+    { headers: { Authorization: `Bearer ${token}` }}
+  );
+  const data = await resp.json();
+  return data.value[0]?.id;
+}
+
+async function fetchMonthData() {
+  const token = await getToken();
+  const siteId = await getSiteId();
+  const listId = await getListId(siteId);
+  if (!listId) return [];
+
+  const email = currentUser.username;
+  const filter = `fields/Empleado eq '${email}' and fields/Mes eq ${currentMonth+1} and fields/Año eq ${currentYear}`;
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items?$expand=fields&$filter=${encodeURIComponent(filter)}`,
+    { headers: { Authorization: `Bearer ${token}` }}
+  );
+  const data = await resp.json();
+  return (data.value || []).map(i => ({ ...i.fields, id: i.id }));
+}
+
+async function saveData() {
+  if (!hasChanges) return;
+  setStatus('Guardando…', 'saving');
+  document.getElementById('btn-save').disabled = true;
+
+  try {
+    const token = await getToken();
+    const siteId = await getSiteId();
+    const listId = await getListId(siteId);
+
+    const email = currentUser.username;
+    const promises = [];
+
+    for (const [day, vals] of Object.entries(monthData)) {
+      const fields = {
+        Empleado:      email,
+        NombreEmpleado: currentUser.name,
+        Año:           currentYear,
+        Mes:           currentMonth + 1,
+        Dia:           parseInt(day),
+        EntradaMañana: vals.em || '',
+        SalidaMañana:  vals.sm || '',
+        EntradaTarde:  vals.et || '',
+        SalidaTarde:   vals.st || ''
+      };
+
+      if (vals.id) {
+        // Actualizar registro existente
+        promises.push(fetch(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${vals.id}`,
+          {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields })
+          }
+        ));
+      } else {
+        // Crear nuevo registro
+        promises.push(fetch(
+          `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields })
+          }
+        ).then(async r => {
+          const created = await r.json();
+          if (monthData[day]) monthData[day].id = created.id;
+        }));
+      }
+    }
+
+    await Promise.all(promises);
+    hasChanges = false;
+    setStatus('Guardado correctamente', 'saved');
+    showToast('Registro guardado', 'success');
+  } catch(e) {
+    console.error(e);
+    setStatus('Error al guardar', 'error');
+    showToast('Error al guardar. Inténtalo de nuevo.', 'error');
+    document.getElementById('btn-save').disabled = false;
+  }
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function setStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'save-status ' + cls;
+}
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+// Comprobar si ya hay sesión activa al cargar
+window.addEventListener('load', async () => {
+  await msalInstance.initialize();
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    msalInstance.setActiveAccount(accounts[0]);
+    await initApp(accounts[0]);
+  }
+});
+</script>
+</body>
+</html>
