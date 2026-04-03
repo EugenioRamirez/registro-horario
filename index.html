@@ -240,21 +240,34 @@ async function loadMonthFromDB() {
 }
 
 async function upsertDay(day, vals) {
-  await sbFetch('registro_horario', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({
-      empleado: currentUser.username,
-      nombre_empleado: currentUser.name,
-      ano: currentYear, mes: currentMonth+1, dia: parseInt(day),
-      entrada_manana: vals.absence ? null : (vals.em||null),
-      salida_manana:  vals.absence ? null : (vals.sm||null),
-      entrada_tarde:  vals.absence ? null : (vals.et||null),
-      salida_tarde:   vals.absence ? null : (vals.st||null),
-      ausencia: vals.absence || null
-    })
-  });
+  const email = currentUser.username;
+  const d = parseInt(day);
+  // Check if record exists
+  const existing = await sbFetch(`registro_horario?empleado=eq.${encodeURIComponent(email)}&ano=eq.${currentYear}&mes=eq.${currentMonth+1}&dia=eq.${d}&select=id`);
+  const body = {
+    empleado: email,
+    nombre_empleado: currentUser.name,
+    ano: currentYear, mes: currentMonth+1, dia: d,
+    entrada_manana: vals.absence ? null : (vals.em||null),
+    salida_manana:  vals.absence ? null : (vals.sm||null),
+    entrada_tarde:  vals.absence ? null : (vals.et||null),
+    salida_tarde:   vals.absence ? null : (vals.st||null),
+    ausencia: vals.absence || null
+  };
+  if (existing && existing.length > 0) {
+    const id = existing[0].id;
+    await sbFetch(`registro_horario?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+  } else {
+    await sbFetch('registro_horario', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+  }
 }
 
 async function signIn() {
