@@ -21,7 +21,7 @@
 
   #login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2d52 0%,#1a5fa8 60%,#2d7dd2 100%);z-index:100;}
   .login-card{background:white;border-radius:20px;padding:2.5rem 3rem;text-align:center;max-width:400px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.2);}
-  .login-logo-img{height:70px;margin-bottom:1.25rem;object-fit:contain;}
+  .login-logo-img{height:90px;margin-bottom:1.25rem;object-fit:contain;}
   .login-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:0.4rem;}
   .login-sub{font-size:13px;color:var(--text-muted);margin-bottom:1.75rem;line-height:1.6;}
   .btn-microsoft{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background 0.2s;}
@@ -29,10 +29,10 @@
 
   #app-screen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
   .fixed-top{flex-shrink:0;background:var(--gray-bg);}
-  header{background:white;border-bottom:1px solid var(--border);padding:0 1.5rem;height:60px;display:flex;align-items:center;justify-content:space-between;}
-  .header-logo img{height:30px;object-fit:contain;}
+  header{background:white;border-bottom:1px solid var(--border);padding:0 1.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
+  .header-logo img{height:42px;object-fit:contain;}
   .header-right{display:flex;align-items:center;gap:10px;}
-  .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+  .user-avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;}
   .user-name{font-size:13px;color:var(--text-muted);}
   .btn-logout{font-size:12px;color:var(--text-muted);background:none;border:0.5px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Nunito',sans-serif;}
   .btn-logout:hover{background:var(--gray-bg);}
@@ -45,11 +45,13 @@
   .btn-nav{width:34px;height:34px;border-radius:8px;border:0.5px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--blue);transition:background 0.15s;}
   .btn-nav:hover{background:var(--blue-light);}
 
-  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0.75rem 1.5rem 0.5rem;}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0.75rem 1.5rem 0.5rem;}
   .sc{background:white;border:0.5px solid var(--border);border-radius:10px;padding:0.65rem 1rem;}
   .sc-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;}
   .sc-value{font-size:20px;font-weight:600;color:var(--blue);}
   .sc.accent .sc-value{color:var(--orange);}
+  .sc.warn .sc-value{color:#dc2626;}
+  .sc.ok .sc-value{color:var(--success);}
 
   .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0.4rem 1.5rem 0.6rem;border-bottom:1px solid var(--border);}
   .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
@@ -60,7 +62,8 @@
   table{width:100%;border-collapse:collapse;}
   thead tr{background:var(--blue);}
   thead th{padding:11px 8px;font-size:11px;font-weight:600;color:white;letter-spacing:0.06em;text-transform:uppercase;text-align:center;}
-  thead th:first-child{text-align:left;padding-left:16px;width:110px;}
+  thead th:first-child{text-align:left;padding-left:16px;width:130px;}
+  thead th:last-child{width:140px;}
   .subhead tr{background:rgba(26,95,168,0.06);}
   .subhead th{padding:6px 8px;font-size:11px;font-weight:500;color:var(--blue);text-align:center;border-bottom:1px solid var(--border);}
   .subhead th:first-child{text-align:left;padding-left:16px;}
@@ -70,19 +73,30 @@
   tbody tr.weekend{background:var(--weekend);}
   tbody tr.holiday{background:var(--holiday);}
   tbody tr.today{background:rgba(224,112,32,0.04);}
+  tbody tr.absence-vac{background:#e8f5e9;}
+  tbody tr.absence-sick{background:#fce4ec;}
+  tbody tr.absence-other{background:#f3e5f5;}
   td{padding:6px 8px;text-align:center;vertical-align:middle;}
   td:first-child{text-align:left;padding-left:16px;font-size:13px;font-weight:500;white-space:nowrap;}
+  td:last-child{text-align:center;}
   .day-num{font-weight:600;}
   .day-name{font-size:11px;color:var(--text-muted);margin-left:4px;}
   .day-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:500;}
   .tag-weekend{background:#e5e7eb;color:#6b7280;}
   .tag-holiday{background:#fde68a;color:#92400e;}
   .tag-today{background:var(--orange-light);color:var(--orange);}
+  .tag-vac{background:#c8e6c9;color:#2e7d32;}
+  .tag-sick{background:#f8bbd0;color:#880e4f;}
+  .tag-other{background:#e1bee7;color:#6a1b9a;}
 
-  .time-input{width:88px;padding:6px 8px;border:0.5px solid var(--border);border-radius:6px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:500;color:var(--text);text-align:center;background:white;transition:border-color 0.15s,box-shadow 0.15s;}
+  .time-input{width:86px;padding:6px 6px;border:0.5px solid var(--border);border-radius:6px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:500;color:var(--text);text-align:center;background:white;transition:border-color 0.15s,box-shadow 0.15s;}
   .time-input:focus{outline:none;border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(55,138,221,0.1);}
   .time-input:disabled{background:transparent;border-color:transparent;color:var(--text-muted);cursor:default;}
   .time-input.filled{border-color:rgba(26,95,168,0.3);background:var(--blue-light);}
+
+  .absence-select{font-family:'Nunito',sans-serif;font-size:12px;border:0.5px solid var(--border);border-radius:6px;padding:5px 6px;background:white;color:var(--text);cursor:pointer;width:130px;}
+  .absence-select:focus{outline:none;border-color:var(--blue-mid);}
+  .absence-select:disabled{background:transparent;border-color:transparent;color:var(--text-muted);cursor:default;}
 
   .save-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:20;}
   .save-status{font-size:13px;color:var(--text-muted);}
@@ -143,12 +157,15 @@
       <div class="sc"><div class="sc-label">Días laborables</div><div class="sc-value" id="sum-workdays">—</div></div>
       <div class="sc"><div class="sc-label">Días registrados</div><div class="sc-value" id="sum-registered">—</div></div>
       <div class="sc accent"><div class="sc-label">Horas totales</div><div class="sc-value" id="sum-hours">—</div></div>
+      <div class="sc warn" id="sc-pending"><div class="sc-label">Pendientes</div><div class="sc-value" id="sum-pending">—</div></div>
     </div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#e5e7eb"></div>Fin de semana</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fde68a"></div>Festivo Madrid</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fde68a"></div>Festivo</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--orange-light)"></div>Hoy</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--blue-light)"></div>Con horas</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c8e6c9"></div>Vacaciones</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f8bbd0"></div>Enfermedad</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e1bee7"></div>Otras ausencias</div>
     </div>
   </div>
 
@@ -156,10 +173,10 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Día</th><th colspan="2">Mañana</th><th colspan="2">Tarde</th></tr>
+          <tr><th>Día</th><th colspan="2">Mañana</th><th colspan="2">Tarde</th><th>Ausencia</th></tr>
         </thead>
         <thead class="subhead">
-          <tr><th></th><th>Entrada</th><th>Salida</th><th>Entrada</th><th>Salida</th></tr>
+          <tr><th></th><th>Entrada</th><th>Salida</th><th>Entrada</th><th>Salida</th><th></th></tr>
         </thead>
         <tbody id="days-tbody"></tbody>
       </table>
@@ -176,7 +193,6 @@
 <script>
 const SUPABASE_URL = 'https://xsqzmtbecsbjqrcxfzbl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_HQg4BX4XXJ04kWIZPc2KVg_xuIToBG_';
-
 const MSAL_CONFIG = {
   auth: {
     clientId: '272a9bb5-a2e7-466a-bc0a-443691f2c523',
@@ -192,6 +208,7 @@ const FESTIVOS = {
 };
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DEFAULT_TIMES = ['09:00','14:00','15:30','18:30'];
 
 const msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
 const scopes = ['User.Read'];
@@ -201,7 +218,6 @@ let currentMonth = new Date().getMonth();
 let monthData = {};
 let hasChanges = false;
 
-// ── SUPABASE HELPERS ──────────────────────────────────────
 async function sbFetch(path, options={}) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     ...options,
@@ -210,73 +226,61 @@ async function sbFetch(path, options={}) {
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type': 'application/json',
       'Prefer': options.prefer || '',
-      ...( options.headers || {} )
+      ...(options.headers || {})
     }
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Supabase error ' + res.status + ': ' + err);
-  }
+  if (!res.ok) { const err = await res.text(); throw new Error('Supabase ' + res.status + ': ' + err); }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
 
 async function loadMonthFromDB() {
   const email = currentUser.username;
-  const data = await sbFetch(
-    `registro_horario?empleado=eq.${encodeURIComponent(email)}&ano=eq.${currentYear}&mes=eq.${currentMonth+1}&select=*`
-  );
-  return data || [];
+  return await sbFetch(`registro_horario?empleado=eq.${encodeURIComponent(email)}&ano=eq.${currentYear}&mes=eq.${currentMonth+1}&select=*`) || [];
 }
 
 async function upsertDay(day, vals) {
-  const email = currentUser.username;
   await sbFetch('registro_horario', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates',
     headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify({
-      empleado: email,
+      empleado: currentUser.username,
       nombre_empleado: currentUser.name,
-      ano: currentYear,
-      mes: currentMonth + 1,
-      dia: parseInt(day),
-      entrada_manana: vals.em || null,
-      salida_manana: vals.sm || null,
-      entrada_tarde: vals.et || null,
-      salida_tarde: vals.st || null
+      ano: currentYear, mes: currentMonth+1, dia: parseInt(day),
+      entrada_manana: vals.absence ? null : (vals.em||null),
+      salida_manana:  vals.absence ? null : (vals.sm||null),
+      entrada_tarde:  vals.absence ? null : (vals.et||null),
+      salida_tarde:   vals.absence ? null : (vals.st||null),
+      ausencia: vals.absence || null
     })
   });
 }
 
-// ── MSAL ─────────────────────────────────────────────────
 async function signIn() {
   try {
     const resp = await msalInstance.loginPopup({ scopes });
     msalInstance.setActiveAccount(resp.account);
     await initApp(resp.account);
-  } catch(e) { console.error(e); showToast('Error al iniciar sesión','error'); }
+  } catch(e) { showToast('Error al iniciar sesión','error'); }
 }
-
 function signOut() {
   msalInstance.logoutPopup();
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app-screen').style.display='none';
 }
-
 async function initApp(account) {
   currentUser = account;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
   const initials = account.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = initials;
   document.getElementById('user-name-label').textContent = account.name;
   await loadMonth();
 }
 
-// ── MONTH ─────────────────────────────────────────────────
 function changeMonth(dir) {
-  if (dir===0) { currentYear=new Date().getFullYear(); currentMonth=new Date().getMonth(); }
+  if(dir===0){ currentYear=new Date().getFullYear(); currentMonth=new Date().getMonth(); }
   else {
     currentMonth+=dir;
     if(currentMonth>11){currentMonth=0;currentYear++;}
@@ -296,15 +300,22 @@ async function loadMonth() {
       monthData[String(r.dia)] = {
         em: r.entrada_manana||'', sm: r.salida_manana||'',
         et: r.entrada_tarde||'',  st: r.salida_tarde||'',
-        id: r.id
+        absence: r.ausencia||'', id: r.id
       };
     });
-  } catch(e) { console.error('Error cargando:', e); }
+  } catch(e) { console.error('Error cargando:',e); }
   renderTable();
   setStatus('Sin cambios pendientes','');
 }
 
-// ── RENDER ────────────────────────────────────────────────
+function isBlocked(d) {
+  const date = new Date(currentYear, currentMonth, d);
+  const dow = date.getDay();
+  const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const festivosYear = FESTIVOS[currentYear]||[];
+  return dow===0||dow===6||festivosYear.includes(dateStr);
+}
+
 function renderTable() {
   const tbody = document.getElementById('days-tbody');
   tbody.innerHTML = '';
@@ -312,9 +323,10 @@ function renderTable() {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const festivosYear = FESTIVOS[currentYear]||[];
-  let workdays=0, registered=0, totalMinutes=0;
+  let workdays=0, registered=0, totalMinutes=0, pending=0;
+  const isCurrentMonth = (currentYear===today.getFullYear() && currentMonth===today.getMonth());
 
-  for (let d=1; d<=daysInMonth; d++) {
+  for(let d=1; d<=daysInMonth; d++) {
     const date = new Date(currentYear, currentMonth, d);
     const dow = date.getDay();
     const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -322,39 +334,80 @@ function renderTable() {
     const isHoliday = festivosYear.includes(dateStr);
     const isToday   = dateStr===todayStr;
     const blocked   = isWeekend||isHoliday;
+    const isPast    = !isCurrentMonth ? (currentYear<today.getFullYear()||(currentYear===today.getFullYear()&&currentMonth<today.getMonth())) : d<today.getDate();
     const saved     = monthData[String(d)]||{};
+    const hasAbsence= !!saved.absence;
+    const hasHours  = saved.em||saved.sm||saved.et||saved.st;
+    const isRegistered = hasAbsence||hasHours;
 
     if(!blocked) workdays++;
-    if(!blocked&&(saved.em||saved.sm||saved.et||saved.st)) registered++;
-    if(!blocked&&saved.em&&saved.sm&&saved.et&&saved.st)
-      totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em)+timeToMins(saved.st)-timeToMins(saved.et);
+    if(!blocked && isRegistered) registered++;
+    if(!blocked && !isRegistered && isPast) pending++;
+    if(!blocked && !hasAbsence && saved.em && saved.sm && saved.et && saved.st)
+      totalMinutes += timeToMins(saved.sm)-timeToMins(saved.em)+timeToMins(saved.st)-timeToMins(saved.et);
 
     const tr = document.createElement('tr');
-    tr.className = blocked?(isWeekend?'weekend':'holiday'):(isToday?'today':'workday');
+    let rowClass = blocked?(isWeekend?'weekend':'holiday'):(isToday?'today':'workday');
+    if(!blocked && hasAbsence) {
+      if(saved.absence==='vacaciones') rowClass='absence-vac';
+      else if(saved.absence==='enfermedad') rowClass='absence-sick';
+      else rowClass='absence-other';
+    }
+    tr.className = rowClass;
+
     let tag='';
     if(isWeekend) tag='<span class="day-tag tag-weekend">Fin de semana</span>';
     else if(isHoliday) tag='<span class="day-tag tag-holiday">Festivo</span>';
     else if(isToday) tag='<span class="day-tag tag-today">Hoy</span>';
 
+    const dayCell = `<td><span class="day-num">${d}</span><span class="day-name">${DIAS_CORTO[dow]}</span>${tag}</td>`;
+
     let cells='';
-    ['em','sm','et','st'].forEach(field => {
-      const val=saved[field]||'';
-      if(blocked) {
-        cells+=`<td><input class="time-input" disabled></td>`;
-      } else {
-        cells+=`<td><input class="time-input${val?' filled':''}" type="time" data-day="${d}" data-field="${field}" value="${val}" oninput="onInput(this)"></td>`;
-      }
-    });
-    tr.innerHTML=`<td><span class="day-num">${d}</span><span class="day-name">${DIAS_CORTO[dow]}</span>${tag}</td>`+cells;
+    if(blocked) {
+      cells='<td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td></td>';
+    } else {
+      const fields=['em','sm','et','st'];
+      const disabled = hasAbsence ? 'disabled' : '';
+      fields.forEach((field,i) => {
+        const val = hasAbsence ? '' : (saved[field]||'');
+        const filled = val?' filled':'';
+        cells+=`<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${field}" value="${val}" ${disabled} tabindex="0" oninput="onInput(this)"></td>`;
+      });
+      const selVal = saved.absence||'';
+      cells+=`<td><select class="absence-select" data-day="${d}" onchange="onAbsence(this)">
+        <option value="">— Normal —</option>
+        <option value="vacaciones" ${selVal==='vacaciones'?'selected':''}>Vacaciones</option>
+        <option value="enfermedad" ${selVal==='enfermedad'?'selected':''}>Enfermedad</option>
+        <option value="otras" ${selVal==='otras'?'selected':''}>Otras ausencias</option>
+      </select></td>`;
+    }
+
+    tr.innerHTML = dayCell + cells;
     tbody.appendChild(tr);
   }
-  document.getElementById('sum-workdays').textContent=workdays;
-  document.getElementById('sum-registered').textContent=registered;
-  document.getElementById('sum-hours').textContent=minsToHours(totalMinutes);
+
+  document.getElementById('sum-workdays').textContent = workdays;
+  document.getElementById('sum-registered').textContent = registered;
+  document.getElementById('sum-hours').textContent = minsToHours(totalMinutes);
+  document.getElementById('sum-pending').textContent = pending;
+  const scPending = document.getElementById('sc-pending');
+  scPending.className = 'sc ' + (pending===0 ? 'ok' : 'warn');
 }
 
-function timeToMins(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+(m||0);}
-function minsToHours(m){if(!m)return '0h';return `${Math.floor(m/60)}h${m%60>0?' '+(m%60)+'m':''}`.trim();}
+function onAbsence(sel) {
+  const day = sel.dataset.day;
+  if(!monthData[day]) monthData[day]={};
+  monthData[day].absence = sel.value;
+  hasChanges=true;
+  setStatus('Cambios sin guardar','');
+  document.getElementById('btn-save').disabled=false;
+  // Re-render row to disable/enable time inputs
+  renderTable();
+  // Re-mark as changed after re-render
+  hasChanges=true;
+  document.getElementById('btn-save').disabled=false;
+  setStatus('Cambios sin guardar','');
+}
 
 function onInput(el) {
   const day=el.dataset.day, field=el.dataset.field;
@@ -367,37 +420,71 @@ function onInput(el) {
   updateSummary();
 }
 
+// Fill defaults on focus if empty
+document.addEventListener('focusin', function(e) {
+  if(e.target.classList.contains('time-input') && !e.target.disabled && !e.target.value) {
+    const field = e.target.dataset.field;
+    const idx = {'em':0,'sm':1,'et':2,'st':3}[field];
+    if(idx !== undefined) e.target.value = DEFAULT_TIMES[idx];
+  }
+});
+
+// Skip clock icon with Tab — make time inputs use tabindex only on the text part
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Tab' && e.target.classList.contains('time-input')) {
+    // browser handles tab naturally between inputs, nothing needed
+  }
+});
+
+function timeToMins(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+(m||0);}
+function minsToHours(m){if(!m)return '0h';return `${Math.floor(m/60)}h${m%60>0?' '+(m%60)+'m':''}`.trim();}
+
 function updateSummary() {
   const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+  const today=new Date();
   const festivosYear=FESTIVOS[currentYear]||[];
-  let workdays=0,registered=0,totalMinutes=0;
+  const isCurrentMonth=(currentYear===today.getFullYear()&&currentMonth===today.getMonth());
+  let workdays=0,registered=0,totalMinutes=0,pending=0;
   for(let d=1;d<=daysInMonth;d++){
     const date=new Date(currentYear,currentMonth,d);
     const dow=date.getDay();
     const dateStr=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const blocked=dow===0||dow===6||festivosYear.includes(dateStr);
+    const isPast=!isCurrentMonth?(currentYear<today.getFullYear()||(currentYear===today.getFullYear()&&currentMonth<today.getMonth())):d<today.getDate();
     const saved=monthData[String(d)]||{};
+    const isRegistered=!!(saved.absence||saved.em||saved.sm||saved.et||saved.st);
     if(!blocked)workdays++;
-    if(!blocked&&(saved.em||saved.sm||saved.et||saved.st))registered++;
-    if(!blocked&&saved.em&&saved.sm&&saved.et&&saved.st)
+    if(!blocked&&isRegistered)registered++;
+    if(!blocked&&!isRegistered&&isPast)pending++;
+    if(!blocked&&!saved.absence&&saved.em&&saved.sm&&saved.et&&saved.st)
       totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em)+timeToMins(saved.st)-timeToMins(saved.et);
   }
   document.getElementById('sum-workdays').textContent=workdays;
   document.getElementById('sum-registered').textContent=registered;
   document.getElementById('sum-hours').textContent=minsToHours(totalMinutes);
+  document.getElementById('sum-pending').textContent=pending;
+  document.getElementById('sc-pending').className='sc '+(pending===0?'ok':'warn');
 }
 
-// ── SAVE ──────────────────────────────────────────────────
 async function saveData() {
   if(!hasChanges) return;
   setStatus('Guardando…','saving');
   document.getElementById('btn-save').disabled=true;
   try {
-    const promises = Object.entries(monthData).map(([day,vals]) => upsertDay(day,vals));
-    await Promise.all(promises);
+    // Fill defaults for any day that has partial data
+    for(const [day,vals] of Object.entries(monthData)) {
+      if(!vals.absence && (vals.em||vals.sm||vals.et||vals.st)) {
+        vals.em = vals.em||DEFAULT_TIMES[0];
+        vals.sm = vals.sm||DEFAULT_TIMES[1];
+        vals.et = vals.et||DEFAULT_TIMES[2];
+        vals.st = vals.st||DEFAULT_TIMES[3];
+      }
+    }
+    await Promise.all(Object.entries(monthData).map(([day,vals])=>upsertDay(day,vals)));
     hasChanges=false;
     setStatus('Guardado correctamente','saved');
     showToast('Registro guardado','success');
+    await loadMonth();
   } catch(e) {
     console.error(e);
     setStatus('Error al guardar','error');
@@ -409,7 +496,7 @@ async function saveData() {
 function setStatus(msg,cls){const el=document.getElementById('save-status');el.textContent=msg;el.className='save-status '+cls;}
 function showToast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.className='toast',3000);}
 
-window.addEventListener('load', async ()=>{
+window.addEventListener('load',async()=>{
   await msalInstance.initialize();
   const accounts=msalInstance.getAllAccounts();
   if(accounts.length>0){msalInstance.setActiveAccount(accounts[0]);await initApp(accounts[0]);}
