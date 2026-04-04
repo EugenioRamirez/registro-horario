@@ -64,7 +64,7 @@
   /* DONUT */
   .dleg { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
   .dleg span { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
-  .tramo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+  .tramo-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-top: 12px; }
   .tramo { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
   .tramo-l { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
   .tramo-v { font-family: var(--font-mono); font-size: 13px; font-weight: 400; }
@@ -168,13 +168,15 @@ let activeYear = 2026;
 let allData = {};
 let lineChart, donutChart;
 
+const _loc = 'es-ES';
 function es(n, dec=2) {
-  if (n === null || n === undefined) return '—';
-  return Number(n).toLocaleString('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' €';
+  if (n === null || n === undefined || isNaN(Number(n))) return '—';
+  return Number(n).toLocaleString(_loc, {minimumFractionDigits:dec, maximumFractionDigits:dec}) + ' €';
 }
-function es0(n) { return es(n,0); }
-function esK1(n) { return (Number(n)/1000).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+'k €'; }
-function esKax(n) { return (Number(n)/1000).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:0})+'k'; }
+function es0(n)  { return es(n, 0); }
+function esK1(n) { return (Number(n)/1000).toLocaleString(_loc, {minimumFractionDigits:1, maximumFractionDigits:1}) + 'k €'; }
+function esKax(n){ return (Number(n)/1000).toLocaleString(_loc, {minimumFractionDigits:0, maximumFractionDigits:0}) + 'k'; }
+function esPct(n){ return Number(n).toLocaleString(_loc, {minimumFractionDigits:1, maximumFractionDigits:1}) + '%'; }
 
 async function loadData() {
   try {
@@ -230,14 +232,15 @@ async function loadData() {
         .slice(0, 12);
     });
 
-    // Procesar pendientes
+    // Procesar pendientes — tramos por días vencido (negativo = no vencido aún)
     const totalPend = pending.reduce((s,r) => s + parseFloat(r.total_con_iva||0), 0);
+    function sumTramo(fn) { return pending.filter(fn).reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0); }
     const tramos = {
-      no_vencido: pending.filter(r=>r.tramo==='no_vencido').reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0),
-      menos_30:   pending.filter(r=>r.tramo==='menos_30').reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0),
-      d3060:      pending.filter(r=>r.tramo==='30_60').reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0),
-      d6090:      pending.filter(r=>r.tramo==='60_90').reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0),
-      mas90:      pending.filter(r=>r.tramo==='mas_90').reduce((s,r)=>s+parseFloat(r.total_con_iva||0),0),
+      d0_30:  sumTramo(r => { const d = parseInt(r.dias_vencido||0); return d >= 0 && d <= 30; }),
+      d31_60: sumTramo(r => { const d = parseInt(r.dias_vencido||0); return d >= 31 && d <= 60; }),
+      d61_90: sumTramo(r => { const d = parseInt(r.dias_vencido||0); return d >= 61 && d <= 90; }),
+      mas90:  sumTramo(r => parseInt(r.dias_vencido||0) > 90),
+      noVenc: sumTramo(r => parseInt(r.dias_vencido||0) < 0),
     };
 
     allData = {
@@ -270,7 +273,7 @@ function renderKPIs(yr) {
   const m    = yr === 2026 ? allData.currentMonth + 1 : 12;
   const delta = ytdP ? ((ytd - ytdP) / ytdP * 100) : null;
   const dH = delta !== null
-    ? `<span class="${delta>=0?'pos':'neg'}">${delta>=0?'+':''}${delta.toFixed(1)}%</span> vs ${prev} mismo periodo`
+    ? `<span class="${delta>=0?'pos':'neg'}">${delta>=0?'+':''}${esPct(delta)}</span> vs ${prev} mismo periodo`
     : '—';
 
   document.getElementById('kpiGrid').innerHTML = `
@@ -339,10 +342,13 @@ function renderLine(yr) {
 function renderDonut() {
   const t = allData.tramos;
   const tramosDef = [
-    { label:'No vencido', val:t.no_vencido, color:'#1D9E75' },
-    { label:'< 30 días',  val:t.menos_30,   color:'#BA7517' },
-    { label:'30–60 días', val:t.d3060,       color:'#D85A30' },
-  ];
+    { label:'No vencido', val:t.noVenc,  color:'#1D9E75' },
+    { label:'0 – 30 días',  val:t.d0_30,  color:'#BA7517' },
+    { label:'31 – 60 días', val:t.d31_60, color:'#D85A30' },
+    { label:'61 – 90 días', val:t.d61_90, color:'#A32D2D' },
+    { label:'+ 90 días',    val:t.mas90,  color:'#501313' },
+  ].filter(t => t.val > 0);
+
   if (donutChart) donutChart.destroy();
   donutChart = new Chart(document.getElementById('donutChart'), {
     type: 'doughnut',
@@ -359,7 +365,7 @@ function renderDonut() {
     `<span><span class="leg-dot" style="background:${t.color};border-radius:50%;width:8px;height:8px;"></span>${t.label} · <strong style="color:#1a1916;">${es(t.val)}</strong></span>`
   ).join('');
   document.getElementById('tramoGrid').innerHTML = tramosDef.map(t =>
-    `<div class="tramo"><div class="tramo-l">${t.label}</div><div class="tramo-v" style="color:${t.val>0?t.color:'#ccc'};">${t.val>0?es(t.val):'—'}</div></div>`
+    `<div class="tramo"><div class="tramo-l">${t.label}</div><div class="tramo-v" style="color:${t.color};">${es(t.val)}</div></div>`
   ).join('');
 }
 
@@ -441,8 +447,8 @@ function renderProj(yr) {
         <div class="pb-bg"><div class="pb-in" style="width:${pct25}%;background:${COL[2025]};"></div></div>
       </div>
       <div class="info-box">
-        YTD vs año anterior: <span class="${dvs25>=0?'pos':'neg'}">${dvs25>=0?'+':''}${dvs25.toFixed(1)}%</span>
-        &nbsp;·&nbsp; Proyección vs 2025: <span class="${dproj>=0?'pos':'neg'}">${dproj>=0?'+':''}${dproj.toFixed(1)}%</span>
+        YTD vs año anterior: <span class="${dvs25>=0?'pos':'neg'}">${dvs25>=0?'+':''}${esPct(dvs25)}</span>
+        &nbsp;·&nbsp; Proyección vs 2025: <span class="${dproj>=0?'pos':'neg'}">${dproj>=0?'+':''}${esPct(dproj)}</span>
       </div>`;
   } else if (yr === 2025) {
     const f  = allData.full[2025];
@@ -457,7 +463,7 @@ function renderProj(yr) {
         <div class="pb-row"><span class="pb-label">Total 2024 s/IVA</span><span class="pb-val">${es0(pF)}</span></div>
         <div class="pb-bg"><div class="pb-in" style="width:${Math.round(pF/f*100)}%;background:${COL[2024]};"></div></div>
       </div>
-      <div class="info-box">Crecimiento 2025 vs 2024: <span class="pos">+${d.toFixed(1)}%</span></div>`;
+      <div class="info-box">Crecimiento 2025 vs 2024: <span class="pos">+${esPct(d)}</span></div>`;
   } else {
     h = `<div style="font-size:12px;color:var(--muted);padding-top:20px;text-align:center;font-family:var(--font-mono);">2024 es el primer año con datos completos.</div>`;
   }
