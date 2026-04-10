@@ -227,7 +227,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: '272a9bb5-a2e7-466a-bc0a-443691f2c523',
     authority: 'https://login.microsoftonline.com/92e73534-d07f-4e50-9904-b194d0faf644',
-    redirectUri: 'https://registro.xpecializa.com'
+    redirectUri: 'https://eugenioramirez.github.io/registro-horario/'
   },
   cache: { cacheLocation: 'sessionStorage' }
 };
@@ -391,8 +391,10 @@ function renderTable() {
     if(!blocked) workdays++;
     if(!blocked && isRegistered) registered++;
     if(!blocked && !isRegistered && isPast) pending++;
-    if(!blocked && !hasAbsence && saved.em && saved.sm && saved.et && saved.st)
-      totalMinutes += timeToMins(saved.sm)-timeToMins(saved.em)+timeToMins(saved.st)-timeToMins(saved.et);
+    if(!blocked && !hasAbsence && saved.em && saved.sm) {
+      totalMinutes += timeToMins(saved.sm)-timeToMins(saved.em);
+      if(saved.et && saved.st) totalMinutes += timeToMins(saved.st)-timeToMins(saved.et);
+    }
 
     const tr = document.createElement('tr');
     let rowClass = blocked?(isWeekend?'weekend':'holiday'):(isToday?'today':'workday');
@@ -504,8 +506,10 @@ function updateSummary() {
     if(!blocked)workdays++;
     if(!blocked&&isRegistered)registered++;
     if(!blocked&&!isRegistered&&isPast)pending++;
-    if(!blocked&&!saved.absence&&saved.em&&saved.sm&&saved.et&&saved.st)
-      totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em)+timeToMins(saved.st)-timeToMins(saved.et);
+    if(!blocked&&!saved.absence&&saved.em&&saved.sm) {
+      totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em);
+      if(saved.et&&saved.st) totalMinutes+=timeToMins(saved.st)-timeToMins(saved.et);
+    }
   }
   document.getElementById('sum-workdays').textContent=workdays;
   document.getElementById('sum-registered').textContent=registered;
@@ -531,8 +535,11 @@ async function saveData() {
       if(!vals.absence && (vals.em||vals.sm||vals.et||vals.st)) {
         vals.em = vals.em||DEFAULT_TIMES[0];
         vals.sm = vals.sm||DEFAULT_TIMES[1];
-        vals.et = vals.et||DEFAULT_TIMES[2];
-        vals.st = vals.st||DEFAULT_TIMES[3];
+        // tarde es opcional: solo rellenar defaults si se tocó algo de tarde
+        if(vals.et||vals.st) {
+          vals.et = vals.et||DEFAULT_TIMES[2];
+          vals.st = vals.st||DEFAULT_TIMES[3];
+        }
       }
     }
     await Promise.all(Object.entries(monthData).map(([day,vals])=>upsertDay(day,vals)));
@@ -649,7 +656,7 @@ function showReminderIfNeeded() {
     const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
     if(blocked) continue;
     const saved = monthData[String(d)]||{};
-    if(!saved.absence && !saved.em && !saved.sm && !saved.et && !saved.st) pending++;
+    if(!saved.absence && !saved.em && !saved.sm) pending++;
   }
   const banner = document.getElementById('reminder-banner');
   if(pending > 0) {
@@ -728,7 +735,7 @@ function showReminderIfNeeded() {
     const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
     if(blocked) continue;
     const saved = monthData[String(d)]||{};
-    if(!saved.absence && !saved.em && !saved.sm && !saved.et && !saved.st) pending++;
+    if(!saved.absence && !saved.em && !saved.sm) pending++;
   }
   const banner = document.getElementById('reminder-banner');
   if(pending > 0) {
@@ -758,7 +765,7 @@ function validateMonth() {
     // For current month, only check up to yesterday
     if(isCurrentMonth && d >= today.getDate()) continue;
     const saved = monthData[String(d)]||{};
-    if(!saved.absence && !saved.em && !saved.sm && !saved.et && !saved.st) missing.push(d);
+    if(!saved.absence && !saved.em && !saved.sm) missing.push(d);
   }
   if(missing.length > 0) {
     showToast('Faltan '+missing.length+' dias por registrar','error');
