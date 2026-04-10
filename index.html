@@ -475,7 +475,19 @@ document.addEventListener('focusin', function(e) {
   if(e.target.classList.contains('time-input') && !e.target.disabled && !e.target.value) {
     const field = e.target.dataset.field;
     const idx = {'em':0,'sm':1,'et':2,'st':3}[field];
-    if(idx !== undefined) e.target.value = DEFAULT_TIMES[idx];
+    if(idx !== undefined) {
+      e.target.value = DEFAULT_TIMES[idx];
+      e.target.classList.add('filled');
+      const day = e.target.dataset.day;
+      if(day) {
+        if(!monthData[day]) monthData[day]={};
+        monthData[day][field] = DEFAULT_TIMES[idx];
+        hasChanges = true;
+        setStatus('Cambios sin guardar','');
+        document.getElementById('btn-save').disabled = false;
+        updateSummary();
+      }
+    }
   }
 });
 
