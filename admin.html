@@ -213,6 +213,16 @@ td:last-child{text-align:center;}
 const SUPABASE_URL = 'https://xsqzmtbecsbjqrcxfzbl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_HQg4BX4XXJ04kWIZPc2KVg_xuIToBG_';
 
+// Fecha de alta por empleado (email en minúsculas -> 'AAAA-MM-DD').
+// Los días anteriores a la fecha de alta no cuentan como laborables ni como pendientes.
+const FECHA_ALTA = {
+  'lucas.prieto@xpecializa.com': '2026-10-18',
+};
+function antesAlta(email, dateStr) {
+  const alta = FECHA_ALTA[(email||'').toLowerCase()];
+  return !!alta && dateStr < alta;
+}
+
 const FESTIVOS = {
   2025: ['2025-01-01','2025-01-06','2025-04-17','2025-04-18','2025-05-01','2025-05-02','2025-05-15','2025-07-25','2025-08-15','2025-10-12','2025-11-01','2025-11-10','2025-12-06','2025-12-08','2025-12-25'],
   2026: ['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-05-01','2026-05-02','2026-05-15','2026-07-25','2026-08-15','2026-10-12','2026-11-02','2026-11-09','2026-12-07','2026-12-08','2026-12-25']
@@ -274,7 +284,7 @@ async function loadData() {
       const date = new Date(currentYear, currentMonth, d);
       const dow = date.getDay();
       const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+      const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(emp.email,dateStr);
       if(blocked) continue;
       workdays++;
       const isPast = isCurrentMonth ? d < today.getDate() : true;
@@ -382,14 +392,15 @@ function showDetail(email) {
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const isWeekend = dow===0||dow===6;
     const isHoliday = festivosYear.includes(dateStr);
-    const blocked = isWeekend||isHoliday;
+    const preAlta = antesAlta(emp.email,dateStr);
+    const blocked = isWeekend||isHoliday||preAlta;
     const r = dayMap[d];
     let rowClass = blocked?'weekend':'';
     if(r&&r.ausencia) rowClass='absence';
 
     let cells = '';
     if(blocked) {
-      const label = isWeekend?'Fin de semana':'Festivo';
+      const label = isWeekend?'Fin de semana':(preAlta?'Antes del alta':'Festivo');
       cells = `<td colspan="5" style="color:#9ca3af;font-style:italic;font-size:11px;">${label}</td>`;
     } else if(r&&r.ausencia) {
       const labels={'vacaciones':'Vacaciones','enfermedad':'Enfermedad','otras':'Otras ausencias'};
@@ -431,12 +442,13 @@ function generatePDF(emp) {
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const isWeekend = dow===0||dow===6;
     const isHoliday = festivosYear.includes(dateStr);
-    const blocked = isWeekend||isHoliday;
+    const preAlta = antesAlta(emp.email,dateStr);
+    const blocked = isWeekend||isHoliday||preAlta;
     const r = dayMap[d];
     const bg = blocked?'#f5f5f5':'white';
     let cells = '';
     if(blocked) {
-      cells = '<td colspan="4" style="text-align:center;color:#aaa;font-size:11px;font-style:italic;">'+(isWeekend?'Fin de semana':'Festivo')+'</td>';
+      cells = '<td colspan="4" style="text-align:center;color:#aaa;font-size:11px;font-style:italic;">'+(isWeekend?'Fin de semana':(preAlta?'Antes del alta':'Festivo'))+'</td>';
     } else if(r&&r.ausencia) {
       const labels={'vacaciones':'Vacaciones','enfermedad':'Enfermedad','otras':'Otras ausencias'};
       cells = '<td colspan="4" style="text-align:center;color:#d97706;font-weight:600;font-size:12px;">'+(labels[r.ausencia]||r.ausencia)+'</td>';

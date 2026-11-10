@@ -232,6 +232,16 @@ const MSAL_CONFIG = {
   cache: { cacheLocation: 'sessionStorage' }
 };
 
+// Fecha de alta por empleado (email en minúsculas -> 'AAAA-MM-DD').
+// Los días anteriores a la fecha de alta no cuentan como laborables ni como pendientes.
+const FECHA_ALTA = {
+  'lucas.prieto@xpecializa.com': '2026-10-18',
+};
+function antesAlta(email, dateStr) {
+  const alta = FECHA_ALTA[(email||'').toLowerCase()];
+  return !!alta && dateStr < alta;
+}
+
 const FESTIVOS = {
   2025: ['2025-01-01','2025-01-06','2025-04-17','2025-04-18','2025-05-01','2025-05-02','2025-05-15','2025-07-25','2025-08-15','2025-10-12','2025-11-01','2025-11-10','2025-12-06','2025-12-08','2025-12-25'],
   2026: ['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-05-01','2026-05-02','2026-05-15','2026-07-25','2026-08-15','2026-10-12','2026-11-02','2026-11-09','2026-12-07','2026-12-08','2026-12-25']
@@ -381,7 +391,8 @@ function renderTable() {
     const isWeekend = dow===0||dow===6;
     const isHoliday = festivosYear.includes(dateStr);
     const isToday   = dateStr===todayStr;
-    const blocked   = isWeekend||isHoliday;
+    const preAlta   = antesAlta(currentUser.username,dateStr);
+    const blocked   = isWeekend||isHoliday||preAlta;
     const isPast    = !isCurrentMonth ? (currentYear<today.getFullYear()||(currentYear===today.getFullYear()&&currentMonth<today.getMonth())) : d<today.getDate();
     const saved     = monthData[String(d)]||{};
     const hasAbsence= !!saved.absence;
@@ -397,7 +408,7 @@ function renderTable() {
     }
 
     const tr = document.createElement('tr');
-    let rowClass = blocked?(isWeekend?'weekend':'holiday'):(isToday?'today':'workday');
+    let rowClass = blocked?((isWeekend||preAlta)?'weekend':'holiday'):(isToday?'today':'workday');
     if(!blocked && hasAbsence) {
       if(saved.absence==='vacaciones') rowClass='absence-vac';
       else if(saved.absence==='enfermedad') rowClass='absence-sick';
@@ -408,6 +419,7 @@ function renderTable() {
     let tag='';
     if(isWeekend) tag='<span class="day-tag tag-weekend">Fin de semana</span>';
     else if(isHoliday) tag='<span class="day-tag tag-holiday">Festivo</span>';
+    else if(preAlta) tag='<span class="day-tag tag-weekend">Antes del alta</span>';
     else if(isToday) tag='<span class="day-tag tag-today">Hoy</span>';
 
     const dayCell = `<td><span class="day-num">${d}</span><span class="day-name">${DIAS_CORTO[dow]}</span>${tag}</td>`;
@@ -511,7 +523,7 @@ function updateSummary() {
     const date=new Date(currentYear,currentMonth,d);
     const dow=date.getDay();
     const dateStr=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const blocked=dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked=dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     const isPast=!isCurrentMonth?(currentYear<today.getFullYear()||(currentYear===today.getFullYear()&&currentMonth<today.getMonth())):d<today.getDate();
     const saved=monthData[String(d)]||{};
     const isRegistered=!!(saved.absence||saved.em||saved.sm||saved.et||saved.st);
@@ -576,7 +588,7 @@ function fillMonth() {
     const date = new Date(currentYear, currentMonth, d);
     const dow = date.getDay();
     const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     if(blocked) continue;
     const saved = monthData[String(d)]||{};
     if(saved.absence||saved.em||saved.sm||saved.et||saved.st) continue;
@@ -610,7 +622,7 @@ async function copyPrevMonth() {
       const date = new Date(currentYear, currentMonth, d);
       const dow = date.getDay();
       const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+      const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
       if(blocked) return;
       const existing = monthData[String(d)]||{};
       if(existing.absence||existing.em||existing.sm||existing.et||existing.st) return;
@@ -665,7 +677,7 @@ function showReminderIfNeeded() {
     const date = new Date(currentYear, currentMonth, d);
     const dow = date.getDay();
     const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     if(blocked) continue;
     const saved = monthData[String(d)]||{};
     if(!saved.absence && !saved.em && !saved.sm) pending++;
@@ -699,7 +711,7 @@ function fillPrevWeek() {
     const day = d.getDate();
     const dow = d.getDay();
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-    const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     if(blocked) continue;
     const saved = monthData[String(day)]||{};
     if(saved.absence||saved.em||saved.sm||saved.et||saved.st) continue;
@@ -744,7 +756,7 @@ function showReminderIfNeeded() {
     const date = new Date(currentYear, currentMonth, d);
     const dow = date.getDay();
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     if(blocked) continue;
     const saved = monthData[String(d)]||{};
     if(!saved.absence && !saved.em && !saved.sm) pending++;
@@ -772,7 +784,7 @@ function validateMonth() {
     const date = new Date(currentYear, currentMonth, d);
     const dow = date.getDay();
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const blocked = dow===0||dow===6||festivosYear.includes(dateStr);
+    const blocked = dow===0||dow===6||festivosYear.includes(dateStr)||antesAlta(currentUser.username,dateStr);
     if(blocked) continue;
     // For current month, only check up to yesterday
     if(isCurrentMonth && d >= today.getDate()) continue;
@@ -845,7 +857,7 @@ function exportPDF() {
     const dateStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const isWeekend = dow===0||dow===6;
     const isHoliday = festivosYear.includes(dateStr);
-    const blocked = isWeekend||isHoliday;
+    const blocked = isWeekend||isHoliday||antesAlta(currentUser.username,dateStr);
     const saved = monthData[String(d)]||{};
 
     let bgColor = blocked ? '#f5f5f5' : 'white';
