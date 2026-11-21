@@ -1,7 +1,7 @@
 'use strict';
 const fichaEl=id=>document.getElementById(id);
 const fichaSafe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fichaKeys=['email','nombre','fecha_alta','puesto','dni_nie','fecha_nacimiento','num_seguridad_social','direccion_via','direccion_numero','direccion_piso','codigo_postal','localidad','provincia','pais','movil','correo_personal','iban'];
+const fichaKeys=['email','nombre','fecha_alta','categoria','dni_nie','fecha_nacimiento','num_seguridad_social','direccion_via','direccion_numero','direccion_piso','codigo_postal','localidad','provincia','pais','movil','correo_personal','iban'];
 let fichaEditando=false;
 function fichaFecha(s){return s?s.split('-').reverse().join('/'):'Sin registrar';}
 function fichaOculta(s){return s?'•••• '+s.slice(-4):'Sin registrar';}
@@ -13,10 +13,10 @@ async function cargarFicha(){
   const [profile,manager]=await Promise.all([portalAuth.from('empleados_fichas').select(fichaKeys.join(',')).eq('email',email).maybeSingle(),portalAuth.from('empleados_gestores').select('email').eq('email',email).maybeSingle()]);
   if(profile.error)throw profile.error;if(manager.error)throw manager.error;const p=profile.data;
   for(const key of fichaKeys){let val=key==='email'?email:p?.[key];if(['fecha_alta','fecha_nacimiento'].includes(key))val=fichaFecha(val);else if(['iban','num_seguridad_social'].includes(key))val=fichaOculta(val);fichaEl('ficha-'+key).textContent=val||'Sin registrar';}
-  fichaEl('ficha-heading').textContent=p?.nombre||'Mi ficha';fichaEl('ficha-subheading').textContent=p?.puesto||'Datos del empleado';fichaEl('ficha-avatar').textContent=(p?.nombre||'XP').trim().split(/\s+/).slice(0,2).map(n=>n[0]).join('').toUpperCase();
+  fichaEl('ficha-heading').textContent=p?.nombre||'Mi ficha';fichaEl('ficha-subheading').textContent=p?.categoria||'Datos del empleado';fichaEl('ficha-avatar').textContent=(p?.nombre||'XP').trim().split(/\s+/).slice(0,2).map(n=>n[0]).join('').toUpperCase();
   message.textContent=p?'':'Tu ficha todavía no está configurada. Contacta con administración.';fichaEl('ficha-gestion').hidden=!manager.data;
-  if(manager.data){const {data,error}=await portalAuth.from('empleados_fichas').select('email,nombre,fecha_alta,puesto').order('nombre');if(error)throw error;
-   fichaEl('ficha-list').innerHTML=data.length?data.map(r=>`<div class="vac-entry"><div><strong>${fichaSafe(r.nombre)}</strong><small>${fichaSafe(r.email)} · ${fichaSafe(r.puesto||'Puesto sin registrar')} · Alta: ${fichaSafe(fichaFecha(r.fecha_alta))}</small></div><button type="button" class="vac-btn vac-secondary" data-ficha-email="${fichaSafe(r.email)}">Editar</button></div>`).join(''):'<p class="vac-hint">No hay fichas registradas.</p>';
+  if(manager.data){const {data,error}=await portalAuth.from('empleados_fichas').select('email,nombre,fecha_alta,categoria').order('nombre');if(error)throw error;
+   fichaEl('ficha-list').innerHTML=data.length?data.map(r=>`<div class="vac-entry"><div><strong>${fichaSafe(r.nombre)}</strong><small>${fichaSafe(r.email)} · ${fichaSafe(r.categoria||'Categoría sin registrar')} · Alta: ${fichaSafe(fichaFecha(r.fecha_alta))}</small></div><button type="button" class="vac-btn vac-secondary" data-ficha-email="${fichaSafe(r.email)}">Editar</button></div>`).join(''):'<p class="vac-hint">No hay fichas registradas.</p>';
   }
  }catch(err){message.textContent='No se ha podido cargar la ficha: '+err.message;}
 }
