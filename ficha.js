@@ -17,8 +17,8 @@ async function cargarFicha(){
   fichaEl('ficha-reconocimiento').textContent=fichaDecision[p?.reconocimiento]||'Pendiente de registrar';
   message.textContent=p?'':'Tu ficha todavía no está configurada. Contacta con administración.';
   fichaEl('ficha-gestion').hidden=!manager.data;
-  if(manager.data){const {data,error}=await portalAuth.from('empleados_fichas').select('email,nombre,fecha_alta').order('nombre');if(error)throw error;
-   fichaEl('ficha-list').innerHTML=data.length?data.map(r=>`<div class="vac-entry"><div><strong>${fichaSafe(r.nombre)}</strong><small>${fichaSafe(r.email)} · Alta: ${fichaSafe(r.fecha_alta.split('-').reverse().join('/'))}</small></div><button type="button" class="vac-btn vac-secondary" data-ficha-email="${fichaSafe(r.email)}">Editar</button></div>`).join(''):'<p class="vac-hint">No hay fichas registradas.</p>';
+  if(manager.data){const {data,error}=await portalAuth.from('empleados_fichas').select('email,nombre,fecha_alta,puesto').order('nombre');if(error)throw error;
+   fichaEl('ficha-list').innerHTML=data.length?data.map(r=>`<div class="vac-entry"><div><strong>${fichaSafe(r.nombre)}</strong><small>${fichaSafe(r.email)} · ${fichaSafe(r.puesto||'Puesto sin registrar')} · Alta: ${fichaSafe(r.fecha_alta.split('-').reverse().join('/'))}</small></div><button type="button" class="vac-btn vac-secondary" data-ficha-email="${fichaSafe(r.email)}">Editar</button></div>`).join(''):'<p class="vac-hint">No hay fichas registradas.</p>';
   }
  }catch(err){message.textContent='No se ha podido cargar la ficha: '+err.message;}
 }
