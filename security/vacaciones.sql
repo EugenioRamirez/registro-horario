@@ -4,7 +4,7 @@ create table if not exists public.vacaciones_calendarios (ano integer primary ke
 create table if not exists public.vacaciones_festivos (fecha date primary key);
 create table if not exists public.vacaciones_saldos (
  empleado text not null check (empleado=lower(empleado) and empleado like '%@xpecializa.com'), ano integer not null,
- asignados numeric(6,2) not null check (asignados between 0 and 366), disfrutados_iniciales numeric(6,2) not null default 0 check (disfrutados_iniciales between 0 and asignados),
+ asignados numeric(6,2) not null check (asignados between 0 and 366 and asignados = floor(asignados)), disfrutados_iniciales numeric(6,2) not null default 0 check (disfrutados_iniciales between 0 and asignados and disfrutados_iniciales = floor(disfrutados_iniciales)),
  primary key (empleado,ano));
 create table if not exists public.vacaciones_solicitudes (
  id bigint generated always as identity primary key, empleado text not null, inicio date not null, fin date not null,
@@ -41,6 +41,7 @@ begin
  if not public.vacaciones_es_responsable() then raise exception 'No autorizado'; end if;
  perform 1 from public.vacaciones_saldos where empleado=lower(trim(p_empleado)) and ano=p_ano for update;
  select coalesce(sum(dias),0) into v_ocupados from public.vacaciones_solicitudes where empleado=lower(trim(p_empleado)) and extract(year from inicio)=p_ano and estado in ('pendiente','aprobada');
+ if p_asignados is null or p_inicial is null or p_asignados <> floor(p_asignados) or p_inicial <> floor(p_inicial) then raise exception 'Los días deben ser números enteros'; end if;
  if p_asignados < p_inicial + v_ocupados then raise exception 'El saldo no puede ser inferior a los días ya reservados y disfrutados'; end if;
  select fecha_alta into v_fecha_alta from public.empleados_fichas where email=lower(trim(p_empleado));
  if v_fecha_alta is null or v_fecha_alta > make_date(p_ano,12,31) then raise exception 'Configura primero la fecha de incorporación en la ficha del empleado'; end if;
