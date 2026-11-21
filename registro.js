@@ -1,14 +1,7 @@
 
 const SUPABASE_URL = 'https://xsqzmtbecsbjqrcxfzbl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_HQg4BX4XXJ04kWIZPc2KVg_xuIToBG_';
-const MSAL_CONFIG = {
-  auth: {
-    clientId: '272a9bb5-a2e7-466a-bc0a-443691f2c523',
-    authority: 'https://login.microsoftonline.com/92e73534-d07f-4e50-9904-b194d0faf644',
-    redirectUri: window.location.hostname === 'registro.xpecializa.com' ? 'https://registro.xpecializa.com/' : window.location.origin + '/auth.html'
-  },
-  cache: { cacheLocation: 'sessionStorage' }
-};
+const portalAuth = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Fecha de alta por empleado (email en minúsculas -> 'AAAA-MM-DD').
 // Los días anteriores a la fecha de alta no cuentan como laborables ni como pendientes.
@@ -28,8 +21,7 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const DEFAULT_TIMES = ['09:00','14:00','15:30','18:30'];
 
-const msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-const scopes = ['User.Read'];
+
 let currentUser = null;
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -38,11 +30,13 @@ let hasChanges = false;
 let monthValidated = false;
 
 async function sbFetch(path, options={}) {
+  const { data: { session }, error: sessionError } = await portalAuth.auth.getSession();
+  if (sessionError || !session?.access_token) throw new Error('Debes iniciar sesión para acceder a tus registros.');
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     ...options,
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Authorization': 'Bearer ' + session.access_token,
       'Content-Type': 'application/json',
       'Prefer': options.prefer || '',
       ...(options.headers || {})
@@ -91,17 +85,10 @@ async function upsertDay(day, vals) {
 }
 
 async function signIn() {
-  try {
-    const resp = await msalInstance.loginPopup({ scopes });
-    msalInstance.setActiveAccount(resp.account);
-    await initApp(resp.account);
-  } catch(e) { document.getElementById('login-error').textContent = 'No se ha podido iniciar sesión. Si Microsoft indica que la dirección de retorno no está configurada, el administrador debe registrar la dirección del portal en Azure.'; }
+  const { error } = await portalAuth.auth.signInWithOAuth({provider:'azure',options:{scopes:'email',redirectTo:window.location.origin+'/'}});
+  if(error) document.getElementById('login-error').textContent = 'No se ha podido iniciar sesión. Contacta con administración.';
 }
-function signOut() {
-  msalInstance.logoutPopup();
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('app-screen').style.display='none';
-}
+async function signOut() { await portalAuth.auth.signOut(); location.assign('/'); }
 async function initApp(account) {
   currentUser = account;
   document.getElementById('login-screen').style.display='none';
@@ -706,7 +693,7 @@ function setStatus(msg,cls){const el=document.getElementById('save-status');el.t
 function showToast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.className='toast',3000);}
 
 window.addEventListener('load',async()=>{
-  await msalInstance.initialize();
-  const accounts=msalInstance.getAllAccounts();
-  if(accounts.length>0){msalInstance.setActiveAccount(accounts[0]);await initApp(accounts[0]);}
+  const { data: { session }, error } = await portalAuth.auth.getSession();
+  if(error) { document.getElementById('login-error').textContent='No se ha podido comprobar tu sesión.'; return; }
+  if(session?.user) { const u=session.user; await initApp({username:u.email, name:u.user_metadata?.full_name || u.user_metadata?.name || u.email}); }
 });

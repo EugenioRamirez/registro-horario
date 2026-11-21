@@ -140,8 +140,8 @@ td:last-child{text-align:center;}
   .search-input{width:100%;}
 }
 </style>
-</head>
-<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script></head>
+<body><div id="admin-auth" style="position:fixed;inset:0;z-index:9999;background:#f5f6f8;display:flex;align-items:center;justify-content:center"><div style="padding:30px;border-radius:12px;background:white;text-align:center"><h2>Administración del registro</h2><p id="admin-auth-message">Accede con tu cuenta corporativa autorizada.</p><button id="admin-login" onclick="adminSignIn()" style="padding:12px 18px;background:#1a5fa8;color:white;border:0;border-radius:8px">Entrar con Microsoft</button></div></div>
 
 <header>
   <div class="header-left">
@@ -212,6 +212,9 @@ td:last-child{text-align:center;}
 <script>
 const SUPABASE_URL = 'https://xsqzmtbecsbjqrcxfzbl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_HQg4BX4XXJ04kWIZPc2KVg_xuIToBG_';
+const adminAuth = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+async function adminSignIn(){const {error}=await adminAuth.auth.signInWithOAuth({provider:'azure',options:{scopes:'email',redirectTo:location.origin+'/admin.html'}});if(error)document.getElementById('admin-auth-message').textContent='No se ha podido iniciar sesión.';}
+
 
 // Fecha de alta por empleado (email en minúsculas -> 'AAAA-MM-DD').
 // Los días anteriores a la fecha de alta no cuentan como laborables ni como pendientes.
@@ -239,8 +242,10 @@ let currentSearch = '';
 let modalEmployee = null;
 
 async function sbFetch(path) {
+  const {data:{session},error} = await adminAuth.auth.getSession();
+  if(error || !session?.access_token) throw new Error('Debes iniciar sesión.');
   const res = await fetch(SUPABASE_URL+'/rest/v1/'+path, {
-    headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+session.access_token}
   });
   const text = await res.text();
   return text ? JSON.parse(text) : [];
@@ -507,7 +512,7 @@ function minsToHours(m){if(!m)return '0h';return Math.floor(m/60)+'h'+(m%60>0?' 
 // Close modal on overlay click
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-loadData();
+(async()=>{const {data:{session},error}=await adminAuth.auth.getSession();const allowed=['eugenio.ramirez@xpecializa.com','susan.matildo@xpecializa.com'];if(error||!session?.user)return;const email=(session.user.email||'').toLowerCase();if(!allowed.includes(email)){document.getElementById('admin-auth-message').textContent='Esta cuenta no tiene acceso al panel.';document.getElementById('admin-login').textContent='Usar otra cuenta';return;}document.getElementById('admin-auth').style.display='none';await loadData();})();
 </script>
 </body>
 </html>
