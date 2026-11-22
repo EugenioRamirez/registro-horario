@@ -1,0 +1,10 @@
+{
+  "Name": "XP - Crear nuevos PDF de nomina",
+  "IsCustom": true,
+  "Description": "Permite crear blobs nuevos; no permite sobrescribir ni borrar documentos.",
+  "Actions": [],
+  "NotActions": [],
+  "DataActions": ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/add/action"],
+  "NotDataActions": [],
+  "AssignableScopes": ["/subscriptions/5c4e9921-b6f5-4f25-9a8b-086d031e51cb/resourceGroups/rg-xpecializa"]
+}
