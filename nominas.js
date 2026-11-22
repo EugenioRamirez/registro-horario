@@ -48,6 +48,7 @@ async function abrirNomina(id, link, message = nominaEl('nominas-message')) {
     const blob = await res.blob();
     const local = URL.createObjectURL(blob);
     viewer.location.replace(local);
+    if(typeof portalAuditar==='function')portalAuditar('Nómina abierta','Nóminas');
     setTimeout(() => URL.revokeObjectURL(local), 600000);
   } catch (e) {
     viewer.close();

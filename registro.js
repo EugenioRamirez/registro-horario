@@ -97,6 +97,7 @@ async function initApp(account) {
   const initials = displayName.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = initials;
   document.getElementById('user-name-label').textContent = displayName;
+  if(typeof portalAuditar==='function')portalAuditar('Acceso al portal','Portal');
   await loadMonth();
 }
 
@@ -335,6 +336,7 @@ async function saveData() {
     await Promise.all(Object.entries(monthData).map(([day,vals])=>upsertDay(day,vals)));
     hasChanges=false;
     setStatus('Guardado correctamente','saved');
+    if(typeof portalAuditar==='function')portalAuditar('Registro guardado','Actividad');
     showToast('Registro guardado','success');
     await loadMonth();
   } catch(e) {
