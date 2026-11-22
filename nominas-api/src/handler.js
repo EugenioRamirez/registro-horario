@@ -1,7 +1,7 @@
 'use strict';
 const {createHash}=require('node:crypto');
 // La identidad y los permisos se comprueban en cada petición; los nombres de blob nunca son parámetros del cliente.
-function makeHandler({lookupUser,lookupDocument,readDocument}) {
+function makeHandler({lookupUser,lookupDocument,lookupAdminDocument,readDocument}) {
  return async function(request,context){
   const reply=(status,message)=>({status,headers:{'Cache-Control':'no-store','Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff'},jsonBody:{error:message}});
   const auth=request.headers.get('authorization')||'';
@@ -11,8 +11,10 @@ function makeHandler({lookupUser,lookupDocument,readDocument}) {
   try{
    const user=await lookupUser(token);
    if(!user?.email||!user.email.toLowerCase().endsWith('@xpecializa.com')||user.app_metadata?.provider!=='azure')return reply(401,'La sesión no es válida.');
-   const doc=await lookupDocument(token,id);
-   if(!doc||doc.empleado?.toLowerCase()!==user.email.toLowerCase()||!/^[a-f0-9]{32}\/\d{4}-\d{2}\.pdf$/.test(doc.blob_key)||!/^[a-f0-9]{64}$/.test(doc.sha256||''))return reply(404,'Documento no encontrado.');
+   let doc=await lookupDocument(token,id);
+   const own=doc?.empleado?.toLowerCase()===user.email.toLowerCase();
+   if(!own) doc=lookupAdminDocument ? await lookupAdminDocument(token,id) : null;
+   if(!doc||!/^[a-f0-9]{32}\/\d{4}-\d{2}\.pdf$/.test(doc.blob_key)||!/^[a-f0-9]{64}$/.test(doc.sha256||''))return reply(404,'Documento no encontrado.');
    const bytes=await readDocument(doc.blob_key);
    if(!bytes||bytes.length<5||bytes.subarray(0,5).toString('ascii')!=='%PDF-'||createHash('sha256').update(bytes).digest('hex')!==doc.sha256)throw Error('Invalid PDF');
    return {status:200,headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="nomina-${doc.ano}-${String(doc.mes).padStart(2,'0')}.pdf"`,'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff'},body:bytes};
