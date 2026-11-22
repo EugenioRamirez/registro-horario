@@ -31,8 +31,7 @@ async function cargarNominas() {
   } catch (e) { message.textContent = 'No se han podido cargar tus nóminas.'; }
 }
 
-async function abrirNomina(id, link) {
-  const message = nominaEl('nominas-message');
+async function abrirNomina(id, link, message = nominaEl('nominas-message')) {
   // La pestaña se abre en respuesta al clic para que el navegador no la bloquee.
   const viewer = window.open('about:blank', '_blank');
   if (!viewer) { message.textContent = 'Permite las ventanas emergentes para abrir la nómina.'; return; }
