@@ -93,9 +93,10 @@ async function initApp(account) {
   currentUser = account;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='flex';
-  const initials = account.name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+  const displayName = account.name.includes('@') ? account.name.split('@')[0].split('.').map(p=>p.charAt(0).toLocaleUpperCase('es')+p.slice(1)).join(' ') : account.name;
+  const initials = displayName.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = initials;
-  document.getElementById('user-name-label').textContent = account.name;
+  document.getElementById('user-name-label').textContent = displayName;
   await loadMonth();
 }
 
@@ -198,10 +199,10 @@ function renderTable() {
       fields.forEach((field,i) => {
         const val = hasAbsence ? '' : (saved[field]||'');
         const filled = val?' filled':'';
-        cells+=`<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${field}" value="${val}" ${disabled} tabindex="0" oninput="onInput(this)"></td>`;
+        cells+=`<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${field}" aria-label="${['Entrada de mañana','Salida de mañana','Entrada de tarde','Salida de tarde'][i]} · ${d} de ${MESES[currentMonth]}" value="${val}" ${disabled} tabindex="0" oninput="onInput(this)"></td>`;
       });
       const selVal = saved.absence||'';
-      cells+=`<td><select class="absence-select" data-day="${d}" onchange="onAbsence(this)">
+      cells+=`<td><select class="absence-select" aria-label="Ausencia · ${d} de ${MESES[currentMonth]}" data-day="${d}" onchange="onAbsence(this)">
         <option value="">— Normal —</option>
         <option value="vacaciones" ${selVal==='vacaciones'?'selected':''}>Vacaciones</option>
         <option value="enfermedad" ${selVal==='enfermedad'?'selected':''}>Enfermedad</option>

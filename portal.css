@@ -57,3 +57,6 @@ button, input, select, textarea { font-family: inherit; }
 .admin-table .admin-sort{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:700;letter-spacing:inherit;cursor:pointer}.admin-sort span{display:inline-block;margin-left:4px;opacity:.8}.admin-sort:hover{text-decoration:underline;text-underline-offset:3px}.admin-sort:focus-visible{outline:2px solid #fff;outline-offset:3px}
 /* Menú compacto y legible, sin saltos en los nombres de sección. */
 .nav button { font-size: 14px; white-space: nowrap; }
+/* Los controles mantienen un foco visible y comparten la tipografía del portal. */
+.nav button:focus-visible,.portal-logout:focus-visible,.admin-tabs button:focus-visible,.admin-link:focus-visible{outline:2px solid #1a5fa8;outline-offset:2px}
+@media(max-width:850px){.admin-table-wrap::after{content:'Desliza la tabla para ver más columnas';display:block;padding:8px 12px;color:#65748a;font-size:12px;background:#fff}}

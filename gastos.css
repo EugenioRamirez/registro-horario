@@ -19,3 +19,14 @@
 .gasto-footer .gasto-message{margin:4px 0}
 @media(max-width:650px){.gasto-meta{grid-template-columns:1fr 1fr}.gasto-meta>.gasto-label{grid-column:1/-1}.gasto-meta .gasto-period-fixed{grid-column:1/-1}.gasto-dialog.gasto-edit-mode[open]{height:calc(100dvh - 24px)}}
 @media(max-height:600px){.gasto-dialog.gasto-edit-mode[open]{height:auto;overflow:auto}.gasto-scroll{flex:none;max-height:220px}}
+/* En pantallas pequeñas el formulario fluye completo y evita un área de edición estrecha. */
+@media(max-width:650px){
+ .gasto-dialog.gasto-edit-mode[open]{height:auto;max-height:calc(100dvh - 24px);overflow:auto}
+ .gasto-edit-mode .gasto-heading{margin-bottom:12px}
+ .gasto-scroll{flex:none;min-height:0;overflow:visible;padding-right:0}
+ .gasto-footer{margin-top:12px}
+ .gasto-line{grid-template-columns:1fr 1fr;gap:10px}
+ .gasto-receipt{align-items:start}
+}
+.gasto-dialog [aria-invalid="true"]{border-color:#b32f28;outline:2px solid rgba(179,47,40,.15)}
+.gasto-dialog :focus-visible,.vac-shell :focus-visible{outline:2px solid #1a5fa8;outline-offset:2px}
