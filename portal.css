@@ -1,0 +1,49 @@
+/* Una sola cabecera y una escala tipográfica para todas las secciones. */
+:root { font-family: 'Nunito', 'Segoe UI', sans-serif; }
+button, input, select, textarea { font-family: inherit; }
+.main, .main:has(.activity-view) { padding: 0; max-width: none; min-width: 0; }
+.portal-header { height: 48px; padding: 0 24px; display: flex; justify-content: flex-end; align-items: center; background: #fff; border-bottom: 1px solid rgba(26,95,168,.15); }
+.portal-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.portal-avatar { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #e8f1fb; color: #1a5fa8; font-size: 13px; font-weight: 600; }
+.portal-name { color: #6b7280; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal-logout { color: #6b7280; background: #fff; border: 1px solid rgba(26,95,168,.15); border-radius: 6px; padding: 5px 10px; font-size: 12px; }
+.portal-logout:hover { background: #f5f6f8; }
+#home, #detail:not(.activity-view) { padding: 20px 24px 48px; }
+#home .hero { margin: 0 0 20px; }
+#detail:not(.activity-view) > .hero { margin: 0 0 16px; }
+#detail > .hero .eyebrow { display: none; }
+#detail > .hero h1 { font-size: 24px; line-height: 1.25; letter-spacing: 0; margin: 0 0 4px; font-weight: 700; }
+#detail > .hero p { font-size: 14px; line-height: 1.4; }
+.vac-shell, .profile-shell { max-width: none; }
+.vac-head { gap: 16px; }
+.vac-head p { margin: 0; }
+.vac-head label { display: flex; gap: 8px; align-items: center; color: #65748a; font-size: 14px; }
+.vac-head select { width: auto; min-width: 105px; padding: 7px 10px; }
+.vac-stats { margin: 12px 0; }
+.vac-stat { padding: 14px 16px; }
+.vac-panel { padding: 18px; }
+.vac-panel h2, .profile-section h2 { font-size: 17px; letter-spacing: 0; }
+.profile-message:empty { display: none; }
+.profile-message { margin: 0 0 12px; }
+.profile-intro { padding: 0 0 12px; }
+.profile-section { padding-top: 16px; }
+#registro-root #app-screen { height: calc(100vh - 48px); }
+@media (max-width: 850px) {
+  .sidebar { padding: 8px 12px; gap: 6px; }
+  .brand img { width: 110px; height: 42px; }
+  .brand small { display: none; }
+  .nav button { padding: 8px 10px; }
+  .portal-header { padding: 0 18px; }
+  #home, #detail:not(.activity-view) { padding: 18px 20px 36px; }
+  #registro-root #app-screen { height: calc(100vh - 150px); min-height: 400px; }
+  #registro-root .month-nav { flex-wrap: wrap; gap: 8px; }
+  #registro-root .table-wrap { overflow-x: auto; }
+  #registro-root table { min-width: 680px; }
+  #registro-root .save-bar { gap: 8px; flex-wrap: wrap; }
+}
+@media (max-width: 520px) {
+  .portal-name { max-width: 55vw; }
+  #home, #detail:not(.activity-view) { padding: 16px 16px 32px; }
+  .vac-head { align-items: flex-start; }
+  .vac-head label { flex-shrink: 0; }
+}
