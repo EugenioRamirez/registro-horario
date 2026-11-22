@@ -55,3 +55,5 @@ button, input, select, textarea { font-family: inherit; }
 
 .layout .main { margin: 0; min-height: 100vh; align-self: start; }
 .admin-table .admin-sort{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:700;letter-spacing:inherit;cursor:pointer}.admin-sort span{display:inline-block;margin-left:4px;opacity:.8}.admin-sort:hover{text-decoration:underline;text-underline-offset:3px}.admin-sort:focus-visible{outline:2px solid #fff;outline-offset:3px}
+/* Menú compacto y legible, sin saltos en los nombres de sección. */
+.nav button { font-size: 14px; white-space: nowrap; }
