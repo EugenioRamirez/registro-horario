@@ -47,3 +47,7 @@ button, input, select, textarea { font-family: inherit; }
   .vac-head { align-items: flex-start; }
   .vac-head label { flex-shrink: 0; }
 }
+
+.nomina-link { color: #1a5fa8; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.nomina-link:hover { color: #154d8a; }
+.nomina-link:focus-visible { outline: 2px solid #1a5fa8; outline-offset: 3px; border-radius: 2px; }
