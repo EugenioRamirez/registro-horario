@@ -62,10 +62,10 @@ async function upsertDay(day, vals) {
     empleado: email,
     nombre_empleado: currentUser.name,
     ano: currentYear, mes: currentMonth+1, dia: d,
-    entrada_manana: vals.absence ? null : (vals.em||null),
-    salida_manana:  vals.absence ? null : (vals.sm||null),
-    entrada_tarde:  vals.absence ? null : (vals.et||null),
-    salida_tarde:   vals.absence ? null : (vals.st||null),
+    entrada_manana: vals.em||null,
+    salida_manana:  vals.sm||null,
+    entrada_tarde:  vals.et||null,
+    salida_tarde:   vals.st||null,
     ausencia: vals.absence || null
   };
   if (existing && existing.length > 0) {
@@ -169,8 +169,8 @@ function renderTable() {
     if(!blocked) workdays++;
     if(!blocked && isRegistered) registered++;
     if(!blocked && !isRegistered && isPast) pending++;
-    if(!blocked && !hasAbsence && saved.em && saved.sm) {
-      totalMinutes += timeToMins(saved.sm)-timeToMins(saved.em);
+    if(!blocked) {
+      if(saved.em && saved.sm) totalMinutes += timeToMins(saved.sm)-timeToMins(saved.em);
       if(saved.et && saved.st) totalMinutes += timeToMins(saved.st)-timeToMins(saved.et);
     }
 
@@ -196,11 +196,10 @@ function renderTable() {
       cells='<td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td><input class="time-input" disabled></td><td></td>';
     } else {
       const fields=['em','sm','et','st'];
-      const disabled = hasAbsence ? 'disabled' : '';
       fields.forEach((field,i) => {
-        const val = hasAbsence ? '' : (saved[field]||'');
+        const val = saved[field]||'';
         const filled = val?' filled':'';
-        cells+=`<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${field}" aria-label="${['Entrada de mañana','Salida de mañana','Entrada de tarde','Salida de tarde'][i]} · ${d} de ${MESES[currentMonth]}" value="${val}" ${disabled} tabindex="0" oninput="onInput(this)"></td>`;
+        cells+=`<td><input class="time-input${filled}" type="time" data-day="${d}" data-field="${field}" aria-label="${['Entrada de mañana','Salida de mañana','Entrada de tarde','Salida de tarde'][i]} · ${d} de ${MESES[currentMonth]}" value="${val}" tabindex="0" oninput="onInput(this)"></td>`;
       });
       const selVal = saved.absence||'';
       cells+=`<td><select class="absence-select" aria-label="Ausencia · ${d} de ${MESES[currentMonth]}" data-day="${d}" onchange="onAbsence(this)">
@@ -251,7 +250,7 @@ function onInput(el) {
 
 // Fill defaults on focus if empty
 document.addEventListener('focusin', function(e) {
-  if(e.target.classList.contains('time-input') && !e.target.disabled && !e.target.value) {
+  if(e.target.classList.contains('time-input') && !e.target.disabled && !e.target.value && !monthData[e.target.dataset.day]?.absence) {
     const field = e.target.dataset.field;
     const idx = {'em':0,'sm':1,'et':2,'st':3}[field];
     if(idx !== undefined) {
@@ -297,8 +296,8 @@ function updateSummary() {
     if(!blocked)workdays++;
     if(!blocked&&isRegistered)registered++;
     if(!blocked&&!isRegistered&&isPast)pending++;
-    if(!blocked&&!saved.absence&&saved.em&&saved.sm) {
-      totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em);
+    if(!blocked) {
+      if(saved.em&&saved.sm) totalMinutes+=timeToMins(saved.sm)-timeToMins(saved.em);
       if(saved.et&&saved.st) totalMinutes+=timeToMins(saved.st)-timeToMins(saved.et);
     }
   }
@@ -418,9 +417,10 @@ async function copyPrevMonth() {
 function validateData() {
   const errors = [];
   for(const [day, vals] of Object.entries(monthData)) {
-    if(vals.absence) continue;
     if(!vals.em && !vals.sm && !vals.et && !vals.st) continue;
     const d = parseInt(day);
+    if(vals.absence && (!!vals.em !== !!vals.sm || !!vals.et !== !!vals.st))
+      errors.push(`Día ${d}: completa la entrada y la salida de cada tramo trabajado`);
     if(vals.em && vals.sm && timeToMins(vals.sm) <= timeToMins(vals.em))
       errors.push(`Día ${d}: la salida de mañana es anterior a la entrada`);
     if(vals.et && vals.st && timeToMins(vals.st) <= timeToMins(vals.et))
@@ -498,9 +498,10 @@ function fillPrevWeek() {
 function validateData() {
   const errors = [];
   for(const [day, vals] of Object.entries(monthData)) {
-    if(vals.absence) continue;
     if(!vals.em && !vals.sm && !vals.et && !vals.st) continue;
     const d = parseInt(day);
+    if(vals.absence && (!!vals.em !== !!vals.sm || !!vals.et !== !!vals.st))
+      errors.push('Día '+d+': completa la entrada y la salida de cada tramo trabajado');
     if(vals.em && vals.sm && timeToMins(vals.sm) <= timeToMins(vals.em))
       errors.push('Dia '+d+': la salida de manana es anterior a la entrada');
     if(vals.et && vals.st && timeToMins(vals.st) <= timeToMins(vals.et))
@@ -629,22 +630,18 @@ function exportPDF() {
     const saved = monthData[String(d)]||{};
 
     let bgColor = blocked ? '#f5f5f5' : 'white';
-    let em='', sm='', et='', st='';
+    let em='';
+    const labels = {vacaciones:'Vacaciones',enfermedad:'Enfermedad',otras:'Otras ausencias'};
     if(!blocked) {
-      if(saved.absence) {
-        const labels = {vacaciones:'Vacaciones',enfermedad:'Enfermedad',otras:'Otras ausencias'};
-        em = '<td colspan="4" style="text-align:center;color:#666;font-style:italic;font-size:11px;">'+( labels[saved.absence]||saved.absence)+'</td>';
-      } else {
-        em = '<td>'+( saved.em||'')+'</td><td>'+(saved.sm||'')+'</td><td>'+(saved.et||'')+'</td><td>'+(saved.st||'')+'</td>';
-      }
+      em = '<td>'+(saved.em||'')+'</td><td>'+(saved.sm||'')+'</td><td>'+(saved.et||'')+'</td><td>'+(saved.st||'')+'</td><td>'+(labels[saved.absence]||'')+'</td>';
     } else {
-      em = '<td></td><td></td><td></td><td></td>';
+      em = '<td></td><td></td><td></td><td></td><td></td>';
     }
 
     rows += `<tr style="background:${bgColor}">
       <td style="text-align:center;font-weight:600;">${d}</td>
       <td style="text-align:center;color:#666;font-size:11px;">${DIAS_CORTO[dow]}</td>
-      ${saved.absence ? em : (blocked ? em : em)}
+      ${em}
     </tr>`;
   }
 
@@ -678,7 +675,7 @@ function exportPDF() {
   </table>
   <table class="main">
     <thead>
-      <tr><th rowspan="2">Día</th><th rowspan="2" style="width:40px"></th><th colspan="2">Mañana</th><th colspan="2">Tarde</th></tr>
+      <tr><th rowspan="2">Día</th><th rowspan="2" style="width:40px"></th><th colspan="2">Mañana</th><th colspan="2">Tarde</th><th rowspan="2">Ausencia</th></tr>
       <tr><th class="subth">Entrada</th><th class="subth">Salida</th><th class="subth">Entrada</th><th class="subth">Salida</th></tr>
     </thead>
     <tbody>${rows}</tbody>
