@@ -1,0 +1,29 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "redirect": "https://empleados.xpecializa.com/",
+      "statusCode": 302
+    },
+    {
+      "route": "/index.html",
+      "redirect": "https://empleados.xpecializa.com/",
+      "statusCode": 302
+    },
+    {
+      "route": "/admin",
+      "redirect": "https://empleados.xpecializa.com/",
+      "statusCode": 302
+    },
+    {
+      "route": "/admin.html",
+      "redirect": "https://empleados.xpecializa.com/",
+      "statusCode": 302
+    },
+    {
+      "route": "/*",
+      "redirect": "https://empleados.xpecializa.com/",
+      "statusCode": 302
+    }
+  ]
+}
