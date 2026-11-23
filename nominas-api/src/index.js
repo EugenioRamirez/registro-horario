@@ -25,3 +25,10 @@ const uploadHandler=makeUploadHandler({
  registerDocument:(token,args)=>rpc('nominas_registrar',token,args)
 });
 app.http('publicarNomina',{methods:['POST'],authLevel:'anonymous',route:'nominas',handler:uploadHandler});
+
+// Solo se habilita tras configurar el acceso restringido al buzón de Administración.
+if(process.env.NOTIFICACIONES_ENABLED==='true'){
+ const {makeNotificationWorker}=require('./notification-worker');
+ const work=makeNotificationWorker({supabaseUrl:url,publishableKey:key,queueSecret:process.env.NOTIFICACIONES_QUEUE_SECRET,graphCredential:new DefaultAzureCredential()});
+ app.timer('notificacionesAprobadas',{schedule:'0 * * * * *',handler:async(_timer,context)=>{try{await work();}catch(error){context.error('No se ha podido procesar la cola de notificaciones.',error?.name||'Error');}}});
+}
