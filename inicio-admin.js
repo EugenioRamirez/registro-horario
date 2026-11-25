@@ -22,7 +22,7 @@ async function adminHomeLoad({greeting,today,year,month}){
   admRows(()=>portalAuth.from('gastos_notas').select('id,empleado,descripcion,estado,total,mes,ano,creada_en,actualizada_en,fecha_aprobacion').in('estado',['pendiente','aprobada']).order('actualizada_en').order('id')),
   admRows(()=>portalAuth.from('registro_horario').select('empleado,dia,entrada_manana,salida_manana,entrada_tarde,salida_tarde,ausencia').eq('ano',year).eq('mes',month).order('empleado').order('dia'))
  ]);if(generation!==adminHomeState.generation)return;
- const [staffResult,vacResult,expenseResult,hourResult]=results,staff=staffResult.status==='fulfilled'?staffResult.value.filter(e=>e.email?.toLowerCase()!=='eugenio.ramirez@xpecializa.com'&&(e.nombre||'').trim().toLocaleUpperCase('es')!=='PRUEBA TEMPORAL NO REAL'):[];
+ const [staffResult,vacResult,expenseResult,hourResult]=results;if(expenseResult.status==='fulfilled')expenseResult.value=expenseResult.value.filter(n=>n.descripcion!=='PRUEBA FICTICIA — NO PAGAR');const staff=staffResult.status==='fulfilled'?staffResult.value.filter(e=>e.email?.toLowerCase()!=='eugenio.ramirez@xpecializa.com'&&(e.nombre||'').trim().toLocaleUpperCase('es')!=='PRUEBA TEMPORAL NO REAL'):[];
  const names=new Map(staff.map(e=>[e.email?.toLowerCase(),e.nombre]));names.set('eugenio.ramirez@xpecializa.com','Eugenio Ramirez');const name=e=>names.get(e?.toLowerCase())||'Empleado';
  if(vacResult.status==='fulfilled')root.querySelector('#ah-vac').textContent=vacResult.value.length;
  if(expenseResult.status==='fulfilled'){root.querySelector('#ah-exp').textContent=expenseResult.value.filter(n=>n.estado==='pendiente').length;root.querySelector('#ah-pay').textContent=expenseResult.value.filter(n=>n.estado==='aprobada').length;}
