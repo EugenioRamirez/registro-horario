@@ -543,6 +543,9 @@ function showReminderIfNeeded() {
 // ── VALIDATION ───────────────────────────────────────────
 function validateMonth() {
   if(hasChanges){ showToast('Guarda los cambios antes de validar','error'); return; }
+  const madridToday = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const nextMonth = new Date(Date.UTC(currentYear,currentMonth+1,1)).toISOString().slice(0,10);
+  if(madridToday < nextMonth){ showToast('Podrás validar el mes cuando haya terminado. Mientras tanto puedes guardar tus registros.','error'); return; }
   // Check all past workdays are registered
   const today = new Date();
   const festivosYear = FESTIVOS[currentYear]||[];
